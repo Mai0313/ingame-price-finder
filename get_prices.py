@@ -66,7 +66,7 @@ def get_game_info_to_csv(countries, parallel_countries=False):
 
 if __name__ == "__main__":
     config = OmegaConf.load("./configs/setting.yaml")
-    parallel_option = config.engine_setting.parallel
+    parallel_countries = config.engine_setting.parallel_countries
 
     countries = get_country()
-    get_game_info_to_csv(countries, parallel_option)
+    get_game_info_to_csv(countries, parallel_countries)
