@@ -8,6 +8,7 @@ from omegaconf import OmegaConf
 from playwright.async_api import async_playwright
 from pydantic import BaseModel
 from rich.progress import Progress
+from rich.text import Text
 
 
 def get_country_list():
@@ -62,43 +63,55 @@ class CurrencyRate(BaseModel):
 
             result = []
             result_csv = []
-            for i, (country, country_in_chinese) in enumerate(self.target_country.items()):
-                func_num = i + 2
-                target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
 
-                try:
-                    await page.goto(target_url, timeout=5000)
-                    visa = await page.locator("#comparison_huilv_Visa").text_content()
-                    master_info = await page.locator(
-                        ".odd:nth-child(1) > td:nth-child(2)"
-                    ).text_content()
-                    master = get_date(master_info)
-                    master, update_date = master.split("\xa0")
-                    jcb = await page.locator("#comparison_huilv_JCB").text_content()
-                    data = {
-                        "國家": country_in_chinese,
-                        "幣值": country,
-                        "金額": 2990,
-                        "更新時間": update_date,
-                        "Visa匯率": visa,
-                        "Visa 試算結果": f"=C{func_num}*E{func_num}*1.5",
-                        "Master匯率": master,
-                        "Master 試算結果": f"=C{func_num}*H{func_num}*1.5",
-                        "JCB匯率": jcb,
-                        "JCB 試算結果": f"=C{func_num}*K{func_num}*1.5",
-                    }
-                    result.append(data)
-                    data_csv = {
-                        "Country": country_in_chinese,
-                        "Currency": country,
-                        "Visa Currency": visa,
-                        "Master Currency": master,
-                        "JCB Currency": jcb,
-                        "Update Time": update_date,
-                    }
-                    result_csv.append(data_csv)
-                except Exception as e:
-                    print(f"{country_in_chinese} has an error, please check {target_url} \n {e}")
+            with Progress() as progress:
+                task1 = progress.add_task("[cyan]Processing...", total=len(self.target_country))
+
+                for i, (country, country_in_chinese) in enumerate(self.target_country.items()):
+                    func_num = i + 2
+                    target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
+
+                    try:
+                        await page.goto(target_url, timeout=5000)
+                        visa = await page.locator("#comparison_huilv_Visa").text_content()
+                        master_info = await page.locator(
+                            ".odd:nth-child(1) > td:nth-child(2)"
+                        ).text_content()
+                        master = get_date(master_info)
+                        master, update_date = master.split("\xa0")
+                        jcb = await page.locator("#comparison_huilv_JCB").text_content()
+                        data = {
+                            "國家": country_in_chinese,
+                            "幣值": country,
+                            "金額": 2990,
+                            "更新時間": update_date,
+                            "Visa匯率": visa,
+                            "Visa 試算結果": f"=C{func_num}*E{func_num}*1.5",
+                            "Master匯率": master,
+                            "Master 試算結果": f"=C{func_num}*H{func_num}*1.5",
+                            "JCB匯率": jcb,
+                            "JCB 試算結果": f"=C{func_num}*K{func_num}*1.5",
+                        }
+                        result.append(data)
+                        data_csv = {
+                            "Country": country_in_chinese,
+                            "Currency": country,
+                            "Visa Currency": visa,
+                            "Master Currency": master,
+                            "JCB Currency": jcb,
+                            "Update Time": update_date,
+                        }
+                        result_csv.append(data_csv)
+                    except Exception as e:
+                        print(
+                            f"{country_in_chinese} has an error, please check {target_url} \n {e}"
+                        )
+
+                    progress.update(
+                        task1,
+                        completed=i + 1,
+                        description=Text(f"[cyan]Processing {country} {country_in_chinese}"),
+                    )
 
             result = pd.DataFrame(result)
             result_csv = pd.DataFrame(result_csv)

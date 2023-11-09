@@ -104,7 +104,9 @@ class CurrencyRate(BaseModel):
                         }
                         result_csv.append(data_csv)
                     except Exception as e:
-                        print(f"{country_in_chinese} has an error, please check {target_url} \n {e}")
+                        print(
+                            f"{country_in_chinese} has an error, please check {target_url} \n {e}"
+                        )
 
         result = pd.DataFrame(result)
         result_csv = pd.DataFrame(result_csv)
@@ -118,4 +120,4 @@ if __name__ == "__main__":
     countries = get_country_list()
     config = OmegaConf.load("./configs/setting.yaml")
     output_path = config.config_path.currency_rate_output_path
-    CurrencyRate(target_country = countries, output_path = output_path).get_default_country()
+    CurrencyRate(target_country=countries, output_path=output_path).get_default_country()
