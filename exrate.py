@@ -50,6 +50,7 @@ def get_default_country(browser, target_country, output_path):
     page = browser.new_page()
 
     result = pd.DataFrame()
+    result_csv = pd.DataFrame()
     for i, (country, country_in_chinese) in enumerate(target_country.items()):
         func_num = i + 2
         target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
@@ -77,6 +78,19 @@ def get_default_country(browser, target_country, output_path):
             ]
             data = pd.DataFrame(data)
             result = pd.concat([result, data], axis=0, ignore_index=True)
+
+            data_csv = [
+                {
+                    "國家": country_in_chinese,
+                    "幣值": country,
+                    "更新時間": update_date,
+                    "Visa匯率": visa,
+                    "Master匯率": master,
+                    "JCB匯率": jcb,
+                }
+            ]
+            data_csv = pd.DataFrame(data_csv)
+            result_csv = pd.concat([result_csv, data_csv], axis=0, ignore_index=True)
             print(country_in_chinese, "has been done")
         except Exception as e:
             print(f"{country_in_chinese} has an error, please check {target_url}")
