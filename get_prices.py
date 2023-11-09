@@ -29,7 +29,6 @@ def get_game_info(args):
         price = app(gameid, lang="en", country=country)["inAppProductPrice"]
         return name, country, price
     except Exception as e:
-        pass
         return name, country, None
 
 

@@ -20,24 +20,27 @@ def get_country():
     return data
 
 
-def get_game_info(name, country):
-    return app(name, lang="en", country=country)
+def get_game_info(args):
+    game, country = args
+    name, gameid, _ = game["name"], game["packageId"], game["id"]
+    try:
+        price = app(gameid, lang="en", country=country)["inAppProductPrice"]
+        return name, country, price
+    except Exception as e:
+        return name, country, None
 
 
-def get_game_info_to_df(country):
+def get_game_price(country):
     games = get_game_list()
-    result = pd.DataFrame()
+    results = []
     for game in tqdm(games, desc=f"Processing {country}"):
-        name, gameid, _ = game["name"], game["packageId"], game["id"]
-        country = country
-        try:
-            price = get_game_info(gameid, country)["inAppProductPrice"]
-        except Exception as e:
-            continue
-        price_df = pd.DataFrame([[name, country, price]], columns=["遊戲名稱", "國家", "價格"])
-        price_df["價格"] = price_df["價格"].str.split("-").str[-1].str.split(" ").str[1]
-        result = pd.concat([result, price_df])
-    return result
+        input_args = (game, country)
+        name, country, price = get_game_info(input_args)
+        data = {"遊戲名稱": name, "國家": country, "價格": price}
+        results.append(data)
+    price_df = pd.DataFrame(results)
+    price_df["價格"] = price_df["價格"].str.split("-").str[-1].str.split(" ").str[1]
+    return price_df
 
 
 def get_game_info_to_csv(countries):
@@ -45,7 +48,7 @@ def get_game_info_to_csv(countries):
     for country in countries:
         CurrencyName = country["currencyName"]
         Country = country["countryName"]
-        result = get_game_info_to_df(CurrencyName)
+        result = get_game_price(CurrencyName)
         result.to_csv(f"./data/{Country}_info.csv", encoding="utf-8", index=None)
 
 
