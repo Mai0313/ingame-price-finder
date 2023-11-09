@@ -1,4 +1,5 @@
 import os
+import warnings
 
 import orjson
 import pandas as pd
@@ -44,6 +45,11 @@ def get_game_price(country):
 
 
 def get_game_info_to_csv(countries):
+    warnings.warn(
+        "get_game_info_to_csv is deprecated and will be removed in a future version.",
+        FutureWarning,
+        stacklevel=2,
+    )
     os.makedirs("./data", exist_ok=True)
     for country in countries:
         CurrencyName = country["currencyName"]

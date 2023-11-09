@@ -1,4 +1,5 @@
 import os
+import warnings
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import orjson
@@ -53,6 +54,11 @@ def process_country(country):
 
 
 def get_game_info_to_csv(countries, parallel_countries=False):
+    warnings.warn(
+        "get_game_info_to_csv is deprecated and will be removed in a future version.",
+        FutureWarning,
+        stacklevel=2,
+    )
     os.makedirs("./data", exist_ok=True)
     if parallel_countries:
         with ProcessPoolExecutor() as executor:
