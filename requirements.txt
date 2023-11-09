@@ -5,3 +5,5 @@ playwright
 pre-commit
 openpyxl
 pydantic
+omegaconf
+rich
