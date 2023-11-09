@@ -1,9 +1,10 @@
 orjsonl
 orjson
 pandas
-playwright
+playwright==1.17.2
 pre-commit
 openpyxl
 pydantic
 omegaconf
 rich
+google_play_scraper
