@@ -46,10 +46,10 @@ def get_game_info_to_df(country):
 
 
 def process_country(country):
-    CurrencyName = country["currencyName"]
-    Country = country["countryName"]
-    result = get_game_info_to_df(CurrencyName)
-    result.to_csv(f"output/{Country}_info.csv", encoding="utf-8", index=None)
+    currency_name = country["currencyName"]
+    country_name = country["countryName"]
+    result = get_game_info_to_df(currency_name)
+    result.to_csv(f"./data/{country_name}_info.csv", encoding="utf-8", index=None)
 
 
 def get_game_info_to_csv(countries, parallel_countries=False):
