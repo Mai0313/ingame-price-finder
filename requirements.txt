@@ -8,3 +8,4 @@ pydantic
 omegaconf
 rich
 google_play_scraper
+tqdm
