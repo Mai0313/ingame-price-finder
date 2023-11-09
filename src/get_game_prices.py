@@ -5,7 +5,7 @@ import orjson
 import pandas as pd
 from google_play_scraper import app
 from omegaconf import OmegaConf
-from pydantic import BaseModel
+from pydantic import BaseModel, DirectoryPath
 from tqdm import tqdm
 
 
@@ -67,6 +67,7 @@ class GamePriceGrabber(BaseModel):
     countries: list[dict]
     parallel_countries: bool
     parallel_games: bool
+    output_path: DirectoryPath
 
     def _get_game_info(self, country):
         currency_name = country["currencyName"]
@@ -76,10 +77,12 @@ class GamePriceGrabber(BaseModel):
             result = processor.get_game_price_v2()
         else:
             result = processor.get_game_price_v1()
-        result.to_csv(f"./data/{country_name}_info.csv", encoding="utf-8", index=None)
+        result.to_csv(
+            f"{self.output_path!s}/{country_name}_info.csv", encoding="utf-8", index=None
+        )
 
     def get_game_info_to_csv(self):
-        os.makedirs("./data", exist_ok=True)
+        os.makedirs(f"{self.output_path!s}", exist_ok=True)
         if self.parallel_countries:
             with ProcessPoolExecutor() as executor:
                 tasks = [
@@ -96,7 +99,11 @@ if __name__ == "__main__":
     config = OmegaConf.load("./configs/setting.yaml")
     parallel_countries = config.engine_setting.parallel_countries
     parallel_games = config.engine_setting.parallel_games
+    output_path = config.config_path.games_price_output_path
     countries = get_country()
     GamePriceGrabber(
-        countries=countries, parallel_countries=parallel_countries, parallel_games=parallel_games
+        countries=countries,
+        parallel_countries=parallel_countries,
+        parallel_games=parallel_games,
+        output_path=output_path,
     ).get_game_info_to_csv()
