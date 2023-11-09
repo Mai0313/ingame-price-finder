@@ -1,9 +1,9 @@
-import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import orjson
 import pandas as pd
 from google_play_scraper import app
+from omegaconf import OmegaConf
 from tqdm import tqdm
 
 
@@ -64,19 +64,8 @@ def get_game_info_to_csv(countries, parallel_countries=False):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Choose parallel processing mode.")
-    parser.add_argument(
-        "--parallel-countries",
-        action="store_true",
-        help="Enable parallel processing of multiple countries.",
-    )
-    args = parser.parse_args()
-    import time
-
-    start = time.time()
+    config = OmegaConf.load("./configs/setting.yaml")
+    parallel_option = config.engine_setting.parallel
 
     countries = get_country()
-    get_game_info_to_csv(countries, args.parallel_countries)
-
-    end = time.time() - start
-    print(end)
+    get_game_info_to_csv(countries, parallel_option)
