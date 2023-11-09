@@ -1,19 +1,24 @@
-import json
+import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+import orjson
 import pandas as pd
 from google_play_scraper import app
 from tqdm import tqdm
 
 
 def get_game_list():
-    with open("data/gameList.json", encoding="utf-8") as f:
-        return json.load(f)
+    with open("./configs/gameList.json", "rb") as file:
+        json_data = file.read()
+        data = orjson.loads(json_data)
+    return data
 
 
 def get_country():
-    with open("data/currencyRate.json", encoding="utf-8") as f:
-        return json.load(f)
+    with open("./configs/currencyRate.json", "rb") as file:
+        json_data = file.read()
+        data = orjson.loads(json_data)
+    return data
 
 
 def get_game_info(args):
@@ -23,8 +28,6 @@ def get_game_info(args):
         price = app(gameid, lang="en", country=country)["inAppProductPrice"]
         return name, country, price
     except Exception as e:
-        # print(f"{name} is not found due to {e}")
-        pass
         return name, country, None
 
 
@@ -42,11 +45,12 @@ def get_game_info_to_df(country):
 
 
 def get_game_info_to_csv(countries):
+    os.makedirs("./data", exist_ok=True)
     for country in countries:
         CurrencyName = country["currencyName"]
         Country = country["countryName"]
         result = get_game_info_to_df(CurrencyName)
-        result.to_csv(f"output/{Country}_info.csv", encoding="utf-8", index=None)
+        result.to_csv(f"./data/{Country}_info.csv", encoding="utf-8", index=None)
 
 
 if __name__ == "__main__":
