@@ -1,3 +1,4 @@
+import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import orjson
@@ -53,6 +54,7 @@ def process_country(country):
 
 
 def get_game_info_to_csv(countries, parallel_countries=False):
+    os.makedirs("./data", exist_ok=True)
     if parallel_countries:
         with ProcessPoolExecutor() as executor:
             tasks = [executor.submit(process_country, country) for country in countries]
