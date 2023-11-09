@@ -1,0 +1,7 @@
+orjsonl
+orjson
+pandas
+playwright
+selenium
+pre-commit
+openpyxl
