@@ -3,6 +3,7 @@ import re
 
 import orjson
 import pandas as pd
+from omegaconf import OmegaConf
 from playwright.sync_api import sync_playwright
 from rich.progress import Progress
 
@@ -55,7 +56,9 @@ def get_default_country(browser, target_country, output_path):
     with Progress() as progress:
         task1 = progress.add_task("[green]Downloading...", total=len(target_country))
         for i, (country, country_in_chinese) in enumerate(target_country.items()):
-            progress.update(task1, advance=1, description=f"[cyan]Downloading {country} {country_in_chinese}")
+            progress.update(
+                task1, advance=1, description=f"[cyan]Downloading {country} {country_in_chinese}"
+            )
             func_num = i + 2
             target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
 
@@ -85,12 +88,12 @@ def get_default_country(browser, target_country, output_path):
 
                 data_csv = [
                     {
-                        "國家": country_in_chinese,
-                        "幣值": country,
-                        "更新時間": update_date,
-                        "Visa匯率": visa,
-                        "Master匯率": master,
-                        "JCB匯率": jcb,
+                        "Country": country_in_chinese,
+                        "Currency": country,
+                        "Visa Currency": visa,
+                        "Master Currency": master,
+                        "JCB Currency": jcb,
+                        "Update Time": update_date,
                     }
                 ]
                 data_csv = pd.DataFrame(data_csv)
@@ -100,13 +103,15 @@ def get_default_country(browser, target_country, output_path):
                 pass
 
     result.to_excel(f"{output_path}/即時匯率.xlsx", index=False)
+    result_csv.to_csv(f"{output_path}/currency_rate.csv", index=False)
     browser.close()
     return result
 
 
 if __name__ == "__main__":
     countries = get_country_list()
-    output_path = "data/currency_rate"
+    config = OmegaConf.load("./configs/setting.yaml")
+    output_path = config.config_path.currency_rate_output_path
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         get_default_country(browser, countries, output_path)
