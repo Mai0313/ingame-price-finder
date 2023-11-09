@@ -5,6 +5,7 @@ import orjson
 import pandas as pd
 from omegaconf import OmegaConf
 from playwright.sync_api import sync_playwright
+from pydantic import BaseModel
 from rich.progress import Progress
 
 
@@ -47,37 +48,40 @@ def get_date(input_string):
     return output_string
 
 
-def get_default_country(target_country, output_path):
-    os.makedirs(output_path, exist_ok=True)
+class CurrencyRate(BaseModel):
+    target_country: dict
+    output_path: str
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
+    def get_default_country(self):
+        os.makedirs(output_path, exist_ok=True)
 
-        result = pd.DataFrame()
-        result_csv = pd.DataFrame()
-        with Progress() as progress:
-            task1 = progress.add_task("[green]Downloading...", total=len(target_country))
-            for i, (country, country_in_chinese) in enumerate(target_country.items()):
-                progress.update(
-                    task1,
-                    advance=1,
-                    description=f"[cyan]Downloading {country} {country_in_chinese}",
-                )
-                func_num = i + 2
-                target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
 
-                try:
-                    page.goto(target_url, timeout=5000)
-                    visa = page.locator("#comparison_huilv_Visa").text_content()
-                    master_info = page.locator(
-                        ".odd:nth-child(1) > td:nth-child(2)"
-                    ).text_content()
-                    master = get_date(master_info)
-                    master, update_date = master.split("\xa0")
-                    jcb = page.locator("#comparison_huilv_JCB").text_content()
-                    data = [
-                        {
+            result = []
+            result_csv = []
+            with Progress() as progress:
+                task1 = progress.add_task("[green]Downloading...", total=len(self.target_country))
+                for i, (country, country_in_chinese) in enumerate(self.target_country.items()):
+                    progress.update(
+                        task1,
+                        advance=1,
+                        description=f"[cyan]Downloading {country} {country_in_chinese}",
+                    )
+                    func_num = i + 2
+                    target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
+
+                    try:
+                        page.goto(target_url, timeout=5000)
+                        visa = page.locator("#comparison_huilv_Visa").text_content()
+                        master_info = page.locator(
+                            ".odd:nth-child(1) > td:nth-child(2)"
+                        ).text_content()
+                        master = get_date(master_info)
+                        master, update_date = master.split("\xa0")
+                        jcb = page.locator("#comparison_huilv_JCB").text_content()
+                        data = {
                             "國家": country_in_chinese,
                             "幣值": country,
                             "金額": 2990,
@@ -89,12 +93,8 @@ def get_default_country(target_country, output_path):
                             "JCB匯率": jcb,
                             "JCB 試算結果": f"=C{func_num}*K{func_num}*1.5",
                         }
-                    ]
-                    data = pd.DataFrame(data)
-                    result = pd.concat([result, data], axis=0, ignore_index=True)
-
-                    data_csv = [
-                        {
+                        result.append(data)
+                        data_csv = {
                             "Country": country_in_chinese,
                             "Currency": country,
                             "Visa Currency": visa,
@@ -102,21 +102,20 @@ def get_default_country(target_country, output_path):
                             "JCB Currency": jcb,
                             "Update Time": update_date,
                         }
-                    ]
-                    data_csv = pd.DataFrame(data_csv)
-                    result_csv = pd.concat([result_csv, data_csv], axis=0, ignore_index=True)
-                except Exception as e:
-                    print(f"{country_in_chinese} has an error, please check {target_url}")
-                    pass
+                        result_csv.append(data_csv)
+                    except Exception as e:
+                        print(f"{country_in_chinese} has an error, please check {target_url} \n {e}")
 
-    result.to_excel(f"{output_path}/即時匯率.xlsx", index=False)
-    result_csv.to_csv(f"{output_path}/currency_rate.csv", index=False)
-    browser.close()
-    return result
+        result = pd.DataFrame(result)
+        result_csv = pd.DataFrame(result_csv)
+        result.to_excel(f"{self.output_path}/即時匯率.xlsx", index=False)
+        result_csv.to_csv(f"{self.output_path}/currency_rate.csv", index=False)
+        browser.close()
+        return result
 
 
 if __name__ == "__main__":
     countries = get_country_list()
     config = OmegaConf.load("./configs/setting.yaml")
     output_path = config.config_path.currency_rate_output_path
-    get_default_country(countries, output_path)
+    CurrencyRate(target_country = countries, output_path = output_path).get_default_country()
