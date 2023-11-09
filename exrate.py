@@ -1,11 +1,9 @@
 import os
+import re
 
 import orjson
 import pandas as pd
-from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
+from playwright.sync_api import sync_playwright
 
 
 def get_country_list():
@@ -15,59 +13,83 @@ def get_country_list():
     return data
 
 
-def get_driver():
-    options = Options()
-    options.add_argument("--headless")
-    options.add_experimental_option("excludeSwitches", ["enable-logging"])
-    WINDOW_SIZE = "1920,1080"
-    options.add_argument("--window-size=%s" % WINDOW_SIZE)
-    driver = webdriver.Chrome(options=options)
-    return driver
+def get_price(input_string):
+    """This function will remove date from input string.
+
+    Args:
+        input_string (str): input string
+
+    Returns:
+        str: output string
+
+    Examples:
+        32.24400000 (2023-11-09) > 32.24400000
+    """
+    output_string = re.sub(r"\s*\([^)]*\)", "", input_string)
+    return output_string
 
 
-def get_default_country(target_country, output_path):
+def get_date(input_string):
+    """This function will remove () from input string.
+
+    Args:
+        input_string (str): input string
+
+    Returns:
+        output_string (str): output string
+
+    Examples:
+        (2023-11-09) > 2023-11-09
+    """
+    output_string = re.sub(r"[()]", "", input_string)
+    return output_string
+
+
+def get_default_country(browser, target_country, output_path):
     os.makedirs(output_path, exist_ok=True)
+    page = browser.new_page()
+
     result = pd.DataFrame()
-    driver = get_driver()
     for i, (country, country_in_chinese) in enumerate(target_country.items()):
         func_num = i + 2
-        driver.get(f"https://www.bestxrate.com/card/mastercard/{country}.html")
+        target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
+        page.goto(target_url)
+
         try:
-            visa = driver.find_element(By.ID, "comparison_huilv_Visa").text
-            visadate = driver.find_element(By.CSS_SELECTOR, ".even .gray_font").text
-            visadate = visadate.replace("(", "").replace(")", "")
-            master = driver.find_element(
-                By.CSS_SELECTOR, ".odd:nth-child(1) > td:nth-child(2)"
-            ).text
-            masterdate = master.split(" ")[-1].replace("(", "").replace(")", "")
-            master = master.split(" ")[0]
-            jcb = driver.find_element(By.CSS_SELECTOR, ".odd:nth-child(3) > td:nth-child(2)").text
-            jcbdate = jcb.split(" ")[-1].replace("(", "").replace(")", "")
-            jcb = jcb.split(" ")[0]
-        except NoSuchElementException:
-            pass
-        data = [
-            {
-                "國家": country_in_chinese,
-                "幣值": country,
-                "金額": 2990,
-                "更新時間": visadate,
-                "Visa匯率": visa,
-                "Visa 試算結果": f"=C{func_num}*E{func_num}*1.5",
-                "Master匯率": master,
-                "Master 試算結果": f"=C{func_num}*H{func_num}*1.5",
-                "JCB匯率": jcb,
-                "JCB 試算結果": f"=C{func_num}*K{func_num}*1.5",
-            }
-        ]
-        data = pd.DataFrame(data)
-        result = pd.concat([result, data], axis=0, ignore_index=True)
-        print(country_in_chinese, "has been done")
+            visa = page.locator("#comparison_huilv_Visa").text_content()
+            master_info = page.locator(".odd:nth-child(1) > td:nth-child(2)").text_content()
+            master = get_date(master_info)
+            master, update_date = master.split("\xa0")
+            jcb = page.locator("#comparison_huilv_JCB").text_content()
+            data = [
+                {
+                    "國家": country_in_chinese,
+                    "幣值": country,
+                    "金額": 2990,
+                    "更新時間": update_date,
+                    "Visa匯率": visa,
+                    "Visa 試算結果": f"=C{func_num}*E{func_num}*1.5",
+                    "Master匯率": master,
+                    "Master 試算結果": f"=C{func_num}*H{func_num}*1.5",
+                    "JCB匯率": jcb,
+                    "JCB 試算結果": f"=C{func_num}*K{func_num}*1.5",
+                }
+            ]
+            data = pd.DataFrame(data)
+            result = pd.concat([result, data], axis=0, ignore_index=True)
+            print(country_in_chinese, "has been done")
+        except Exception as e:
+            print(f"{country_in_chinese} has an error, please check {target_url}")
+            continue
+
     result.to_excel(f"{output_path}/即時匯率.xlsx", index=False)
+    browser.close()
     return result
 
 
 if __name__ == "__main__":
     countries = get_country_list()
     output_path = "data"
-    get_default_country(countries, output_path)
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        get_default_country(browser, countries, output_path)
