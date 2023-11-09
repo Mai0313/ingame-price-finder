@@ -1,0 +1,20 @@
+[
+    {"Currency": "USD", "CurrencyName": "美金", "Country": "US", "Country_Chinese": "美國"},
+    {"Currency": "AUD", "CurrencyName": "澳幣", "Country": "AU", "Country_Chinese": "澳洲"},
+    {"Currency": "CAD", "CurrencyName": "加幣", "Country": "CA", "Country_Chinese": "加拿大"},
+    {"Currency": "CHF", "CurrencyName": "瑞士法郎", "Country": "CH", "Country_Chinese": "瑞士"},
+    {"Currency": "HKD", "CurrencyName": "港幣", "Country": "HK", "Country_Chinese": "香港"},
+    {"Currency": "NZD", "CurrencyName": "紐幣", "Country": "NZ", "Country_Chinese": "紐西蘭"},
+    {"Currency": "SEK", "CurrencyName": "瑞典克朗", "Country": "SE", "Country_Chinese": "瑞典"},
+    {"Currency": "ZAR", "CurrencyName": "南非幣", "Country": "ZA", "Country_Chinese": "南非"},
+    {"Currency": "SGD", "CurrencyName": "新加坡幣", "Country": "SG", "Country_Chinese": "新加坡"},
+    {"Currency": "THB", "CurrencyName": "泰銖", "Country": "TH", "Country_Chinese": "泰國"},
+    {"Currency": "PHP", "CurrencyName": "菲國比索", "Country": "PH", "Country_Chinese": "菲律賓"},
+    {"Currency": "IDR", "CurrencyName": "印尼盾", "Country": "ID", "Country_Chinese": "印尼"},
+    {"Currency": "EUR", "CurrencyName": "歐元", "Country": "EU", "Country_Chinese": "歐洲"},
+    {"Currency": "JPY", "CurrencyName": "日圓", "Country": "JP", "Country_Chinese": "日本"},
+    {"Currency": "GBP", "CurrencyName": "英鎊", "Country": "UK", "Country_Chinese": "英國"},
+    {"Currency": "EUR", "CurrencyName": "歐元", "Country": "EU", "Country_Chinese": "歐洲"},
+    {"Currency": "JPY", "CurrencyName": "日圓", "Country": "JP", "Country_Chinese": "日本"},
+    {"Currency": "GBP", "CurrencyName": "英鎊", "Country": "UK", "Country_Chinese": "英國"}
+]
