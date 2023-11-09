@@ -4,6 +4,6 @@ engine_setting:
 
 config_path:
   country_list: ./configs/currencyRate.json
-  country_output_path: ./data/currency_rate
+  currency_rate_output_path: ./data/currency_rate
   game_list: ./configs/gameList.json
   games_price_output_path: ./data/games_price
