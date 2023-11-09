@@ -6,6 +6,7 @@ import pandas as pd
 from google_play_scraper import app
 from omegaconf import OmegaConf
 from pydantic import BaseModel, DirectoryPath
+from rich.progress import Progress
 from tqdm import tqdm
 
 
@@ -35,6 +36,7 @@ def get_game_info(args):
 
 class GamePriceProcessor(BaseModel):
     country: str
+    country_name: str
 
     def get_game_price_v1(self):
         games = get_game_list()
@@ -55,7 +57,7 @@ class GamePriceProcessor(BaseModel):
             results = [
                 r.result()
                 for r in tqdm(
-                    as_completed(tasks), total=len(tasks), desc=f"Processing {self.country}"
+                    as_completed(tasks), total=len(tasks), desc=f"Processing {self.country_name}"
                 )
             ]
         price_df = pd.DataFrame(results, columns=["遊戲名稱", "國家", "價格"])
@@ -67,12 +69,12 @@ class GamePriceGrabber(BaseModel):
     countries: list[dict]
     parallel_countries: bool
     parallel_games: bool
-    output_path: DirectoryPath
+    output_path: str
 
     def _get_game_info(self, country):
         currency_name = country["currencyName"]
         country_name = country["countryName"]
-        processor = GamePriceProcessor(country=currency_name)
+        processor = GamePriceProcessor(country=currency_name, country_name = country_name)
         if self.parallel_games:
             result = processor.get_game_price_v2()
         else:
