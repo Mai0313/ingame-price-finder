@@ -74,7 +74,7 @@ class GamePriceGrabber(BaseModel):
     def _get_game_info(self, country):
         currency_name = country["currencyName"]
         country_name = country["countryName"]
-        processor = GamePriceProcessor(country=currency_name, country_name = country_name)
+        processor = GamePriceProcessor(country=currency_name, country_name=country_name)
         if self.parallel_games:
             result = processor.get_game_price_v2()
         else:

@@ -73,11 +73,17 @@ class CurrencyRate(BaseModel):
 
                     try:
                         await page.goto(target_url, timeout=3000)
-                        visa = await page.locator("#comparison_huilv_Visa").text_content(timeout=3000)
-                        master_info = await page.locator(".odd:nth-child(1) > td:nth-child(2)").text_content(timeout=3000)
+                        visa = await page.locator("#comparison_huilv_Visa").text_content(
+                            timeout=3000
+                        )
+                        master_info = await page.locator(
+                            ".odd:nth-child(1) > td:nth-child(2)"
+                        ).text_content(timeout=3000)
                         master = get_date(master_info)
                         master, update_date = master.split("\xa0")
-                        jcb = await page.locator("#comparison_huilv_JCB").text_content(timeout=3000)
+                        jcb = await page.locator("#comparison_huilv_JCB").text_content(
+                            timeout=3000
+                        )
                         data = {
                             "國家": country_in_chinese,
                             "幣值": country,
