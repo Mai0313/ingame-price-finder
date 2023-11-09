@@ -56,7 +56,7 @@ class CurrencyRate(BaseModel):
         os.makedirs(output_path, exist_ok=True)
 
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = p.chromium.launch(headless=True, timeout=3000)
             page = browser.new_page()
 
             result = []
@@ -73,14 +73,14 @@ class CurrencyRate(BaseModel):
                     target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
 
                     try:
-                        page.goto(target_url, timeout=5000)
-                        visa = page.locator("#comparison_huilv_Visa").text_content()
+                        page.goto(target_url, timeout=3000)
+                        visa = page.locator("#comparison_huilv_Visa").text_content(timeout=3000)
                         master_info = page.locator(
                             ".odd:nth-child(1) > td:nth-child(2)"
-                        ).text_content()
+                        ).text_content(timeout=3000)
                         master = get_date(master_info)
                         master, update_date = master.split("\xa0")
-                        jcb = page.locator("#comparison_huilv_JCB").text_content()
+                        jcb = page.locator("#comparison_huilv_JCB").text_content(timeout=3000)
                         data = {
                             "國家": country_in_chinese,
                             "幣值": country,
@@ -107,12 +107,12 @@ class CurrencyRate(BaseModel):
                         print(
                             f"{country_in_chinese} has an error, please check {target_url} \n {e}"
                         )
+            browser.close()
 
         result = pd.DataFrame(result)
         result_csv = pd.DataFrame(result_csv)
         result.to_excel(f"{self.output_path}/即時匯率.xlsx", index=False)
         result_csv.to_csv(f"{self.output_path}/currency_rate.csv", index=False)
-        browser.close()
         return result
 
 
