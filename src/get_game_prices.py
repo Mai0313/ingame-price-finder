@@ -65,23 +65,38 @@ class GamePriceProcessor(BaseModel):
 
 class GamePriceGrabber(BaseModel):
     countries: list[dict]
-    parallel_option: bool
+    parallel_countries: bool
+    parallel_games: bool
+
+    def _get_game_info(self, country):
+        currency_name = country["currencyName"]
+        country_name = country["countryName"]
+        processor = GamePriceProcessor(country=currency_name)
+        if self.parallel_games:
+            result = processor.get_game_price_v2()
+        else:
+            result = processor.get_game_price_v1()
+        result.to_csv(f"./data/{country_name}_info.csv", encoding="utf-8", index=None)
 
     def get_game_info_to_csv(self):
         os.makedirs("./data", exist_ok=True)
-        for country in self.countries:
-            currency_name = country["currencyName"]
-            country_name = country["countryName"]
-            processor = GamePriceProcessor(country=currency_name)
-            if self.parallel_option:
-                result = processor.get_game_price_v2()
-            else:
-                result = processor.get_game_price_v1()
-            result.to_csv(f"./data/{country_name}_info.csv", encoding="utf-8", index=None)
+        if self.parallel_countries:
+            with ProcessPoolExecutor() as executor:
+                tasks = [
+                    executor.submit(self._get_game_info, country) for country in self.countries
+                ]
+                for _ in tqdm(as_completed(tasks), total=len(tasks), desc="Processing countries"):
+                    pass
+        else:
+            for country in self.countries:
+                self._get_game_info(country)
 
 
 if __name__ == "__main__":
     config = OmegaConf.load("./configs/setting.yaml")
-    parallel_option = config.engine_setting.parallel
+    parallel_countries = config.engine_setting.parallel_countries
+    parallel_games = config.engine_setting.parallel_games
     countries = get_country()
-    GamePriceGrabber(countries=countries, parallel_option=parallel_option).get_game_info_to_csv()
+    GamePriceGrabber(
+        countries=countries, parallel_countries=parallel_countries, parallel_games=parallel_games
+    ).get_game_info_to_csv()
