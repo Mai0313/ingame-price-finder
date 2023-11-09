@@ -53,7 +53,7 @@ def get_default_country(browser, target_country, output_path):
     for i, (country, country_in_chinese) in enumerate(target_country.items()):
         func_num = i + 2
         target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
-        page.goto(target_url)
+        page.goto(target_url, timeout=5000)
 
         try:
             visa = page.locator("#comparison_huilv_Visa").text_content()
