@@ -58,7 +58,7 @@ class CurrencyRate(BaseModel):
         os.makedirs(self.output_path, exist_ok=True)
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            browser = await p.chromium.launch(headless=True, timeout=3000)
             page = await browser.new_page()
 
             result = []
@@ -72,14 +72,12 @@ class CurrencyRate(BaseModel):
                     target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
 
                     try:
-                        await page.goto(target_url, timeout=5000)
-                        visa = await page.locator("#comparison_huilv_Visa").text_content()
-                        master_info = await page.locator(
-                            ".odd:nth-child(1) > td:nth-child(2)"
-                        ).text_content()
+                        await page.goto(target_url, timeout=3000)
+                        visa = await page.locator("#comparison_huilv_Visa").text_content(timeout=3000)
+                        master_info = await page.locator(".odd:nth-child(1) > td:nth-child(2)").text_content(timeout=3000)
                         master = get_date(master_info)
                         master, update_date = master.split("\xa0")
-                        jcb = await page.locator("#comparison_huilv_JCB").text_content()
+                        jcb = await page.locator("#comparison_huilv_JCB").text_content(timeout=3000)
                         data = {
                             "國家": country_in_chinese,
                             "幣值": country,
