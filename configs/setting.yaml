@@ -1,2 +1,3 @@
 engine_setting:
-  parallel: true
+  parallel_countries: true
+  parallel_games: true
