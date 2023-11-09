@@ -1,20 +1,24 @@
 import argparse
-import json
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+import orjson
 import pandas as pd
 from google_play_scraper import app
 from tqdm import tqdm
 
 
 def get_game_list():
-    with open("data/gameList.json", encoding="utf-8") as f:
-        return json.load(f)
+    with open("./configs/gameList.json", "rb") as file:
+        json_data = file.read()
+        data = orjson.loads(json_data)
+    return data
 
 
 def get_country():
-    with open("data/currencyRate.json", encoding="utf-8") as f:
-        return json.load(f)
+    with open("./configs/currencyRate.json", "rb") as file:
+        json_data = file.read()
+        data = orjson.loads(json_data)
+    return data
 
 
 def get_game_info(args):
