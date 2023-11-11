@@ -73,14 +73,13 @@ class GamePriceGrabber(BaseModel):
     def _get_game_info(self, country):
         currency_name = country["currencyName"]
         country_name = country["countryName"]
-        country_name_en = country["Country"]
         processor = GamePriceProcessor(country=currency_name, country_name=country_name)
         if self.parallel_games:
             result = processor.get_game_price_v2()
         else:
             result = processor.get_game_price_v1()
         result.to_csv(
-            f"{self.output_path!s}/{country_name_en}_info.csv", encoding="utf-8", index=None
+            f"{self.output_path!s}/{country_name}_info.csv", encoding="utf-8", index=None
         )
 
     def get_game_info_to_csv(self):
