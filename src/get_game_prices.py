@@ -43,10 +43,10 @@ class GamePriceProcessor(BaseModel):
         for game in tqdm(games, desc=f"Processing {self.country}"):
             input_args = (game, self.country)
             name, country, price = get_game_info(input_args)
-            data = {"遊戲名稱": name, "國家": country, "價格": price}
+            data = {"Game": name, "Country": country, "Price": price}
             results.append(data)
         price_df = pd.DataFrame(results)
-        price_df["價格"] = price_df["價格"].str.split("-").str[-1].str.split(" ").str[1]
+        price_df["Price"] = price_df["Price"].str.split("-").str[-1].str.split(" ").str[1]
         return price_df
 
     def get_game_price_v2(self):
@@ -59,8 +59,8 @@ class GamePriceProcessor(BaseModel):
                     as_completed(tasks), total=len(tasks), desc=f"Processing {self.country_name}"
                 )
             ]
-        price_df = pd.DataFrame(results, columns=["遊戲名稱", "國家", "價格"])
-        price_df["價格"] = price_df["價格"].str.split("-").str[-1].str.split(" ").str[1]
+        price_df = pd.DataFrame(results, columns=["Game", "Country", "Price"])
+        price_df["Price"] = price_df["Price"].str.split("-").str[-1].str.split(" ").str[1]
         return price_df
 
 
