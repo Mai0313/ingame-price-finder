@@ -5,8 +5,7 @@ import orjson
 import pandas as pd
 from google_play_scraper import app
 from omegaconf import OmegaConf
-from pydantic import BaseModel, DirectoryPath
-from rich.progress import Progress
+from pydantic import BaseModel
 from tqdm import tqdm
 
 
@@ -81,7 +80,7 @@ class GamePriceGrabber(BaseModel):
         else:
             result = processor.get_game_price_v1()
         result.to_csv(
-            f"{self.output_path!s}/{country_name}_info.csv", encoding="utf-8", index=None
+            f"{self.output_path!s}/{country_name_en}_info.csv", encoding="utf-8", index=None
         )
 
     def get_game_info_to_csv(self):
