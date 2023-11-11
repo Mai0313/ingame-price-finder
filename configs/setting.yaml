@@ -1,6 +1,6 @@
 engine_setting:
   parallel_countries: true
-  parallel_games: true
+  parallel_games: false
 
 config_path:
   country_list: ./configs/currencyRate.json
