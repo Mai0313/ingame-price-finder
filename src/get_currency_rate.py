@@ -111,7 +111,7 @@ class CurrencyRate(BaseModel):
 
         result = pd.DataFrame(result)
         result_csv = pd.DataFrame(result_csv)
-        result.to_excel(f"{self.output_path}/即時匯率.xlsx", index=False)
+        result.to_excel(f"{self.output_path}/currency_rate.xlsx", index=False)
         result_csv.to_csv(f"{self.output_path}/currency_rate.csv", index=False)
         return result
 
