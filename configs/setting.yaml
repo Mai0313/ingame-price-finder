@@ -1,5 +1,5 @@
 engine_setting:
-  parallel_countries: true
+  parallel_countries: false
   parallel_games: true
 
 config_path:
