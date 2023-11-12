@@ -1,5 +1,6 @@
 import os
 import re
+import warnings
 
 import orjson
 import pandas as pd
@@ -53,6 +54,11 @@ class CurrencyRate(BaseModel):
     output_path: str
 
     def get_default_country(self):
+        warnings.warn(
+            "get_game_info_to_csv is deprecated and will be removed in a future version.",
+            FutureWarning,
+            stacklevel=2,
+        )
         os.makedirs(output_path, exist_ok=True)
 
         with sync_playwright() as p:
