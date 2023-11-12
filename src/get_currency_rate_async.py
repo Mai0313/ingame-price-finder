@@ -12,7 +12,7 @@ from rich.text import Text
 
 
 def get_country_list():
-    with open("./configs/countries.json", "rb") as file:
+    with open("./configs/countries_v1.json", "rb") as file:
         json_data = file.read()
         data = orjson.loads(json_data)
     return data
@@ -106,8 +106,10 @@ class CurrencyRate(BaseModel):
                         }
                         result.append(data)
                         data_csv = {
-                            "Country": country_chinese,
+                            "Country_CN": country_chinese,
+                            "Country": country_en,
                             "Currency": currency_name_en,
+                            "Currency_CN": currency_name_chinese,
                             "Visa Currency": visa,
                             "Master Currency": master,
                             "JCB Currency": jcb,
