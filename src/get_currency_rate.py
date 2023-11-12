@@ -10,7 +10,7 @@ from rich.progress import Progress
 
 
 def get_country_list():
-    with open("./configs/countries_original.json", "rb") as file:
+    with open("./configs/countries.json", "rb") as file:
         json_data = file.read()
         data = orjson.loads(json_data)
     return data
@@ -49,7 +49,7 @@ def get_date(input_string):
 
 
 class CurrencyRate(BaseModel):
-    target_country: dict
+    target_countries: list[dict]
     output_path: str
 
     def get_default_country(self):
@@ -62,15 +62,26 @@ class CurrencyRate(BaseModel):
             result = []
             result_csv = []
             with Progress() as progress:
-                task1 = progress.add_task("[green]Downloading...", total=len(self.target_country))
-                for i, (country, country_in_chinese) in enumerate(self.target_country.items()):
+                task1 = progress.add_task(
+                    "[green]Downloading...", total=len(self.target_countries)
+                )
+                for i, target_country in enumerate(self.target_countries):
+                    func_num = i + 2
+                    # {'Currency': 'USD', 'CurrencyName': '美金', 'Country': 'US', 'Country_Chinese': '美國'}
+                    country_en = target_country.get("Country")
+                    currency_name_en = target_country.get("Currency")
+
+                    country_chinese = target_country.get("Country_Chinese")
+                    currency_name_chinese = target_country.get("CurrencyName")
+
+                    target_url = (
+                        f"https://www.bestxrate.com/card/mastercard/{currency_name_en}.html"
+                    )
                     progress.update(
                         task1,
                         advance=1,
-                        description=f"[cyan]Downloading {country} {country_in_chinese}",
+                        description=f"[cyan]Processing {country_en} {country_chinese}",
                     )
-                    func_num = i + 2
-                    target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
 
                     try:
                         page.goto(target_url, timeout=3000)
@@ -82,8 +93,8 @@ class CurrencyRate(BaseModel):
                         master, update_date = master.split("\xa0")
                         jcb = page.locator("#comparison_huilv_JCB").text_content(timeout=3000)
                         data = {
-                            "國家": country_in_chinese,
-                            "幣值": country,
+                            "國家": country_chinese,
+                            "幣值": currency_name_chinese,
                             "金額": 2990,
                             "更新時間": update_date,
                             "Visa匯率": visa,
@@ -95,8 +106,8 @@ class CurrencyRate(BaseModel):
                         }
                         result.append(data)
                         data_csv = {
-                            "Country": country_in_chinese,
-                            "Currency": country,
+                            "Country": country_en,
+                            "Currency": currency_name_en,
                             "Visa Currency": visa,
                             "Master Currency": master,
                             "JCB Currency": jcb,
@@ -105,7 +116,7 @@ class CurrencyRate(BaseModel):
                         result_csv.append(data_csv)
                     except Exception as e:
                         print(
-                            f"{country_in_chinese} has an error, please check {target_url} \n {e}"
+                            f"{currency_name_chinese} has an error, please check {target_url} \n {e}"
                         )
             browser.close()
 
@@ -120,4 +131,4 @@ if __name__ == "__main__":
     countries = get_country_list()
     config = OmegaConf.load("./configs/setting.yaml")
     output_path = config.config_path.currency_rate_output_path
-    CurrencyRate(target_country=countries, output_path=output_path).get_default_country()
+    CurrencyRate(target_countries=countries, output_path=output_path).get_default_country()
