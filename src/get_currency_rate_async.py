@@ -12,7 +12,7 @@ from rich.text import Text
 
 
 def get_country_list():
-    with open("./configs/countries_original.json", "rb") as file:
+    with open("./configs/countries.json", "rb") as file:
         json_data = file.read()
         data = orjson.loads(json_data)
     return data
@@ -51,7 +51,7 @@ def get_date(input_string):
 
 
 class CurrencyRate(BaseModel):
-    target_country: dict
+    target_countries: list[dict]
     output_path: str
 
     async def get_default_country(self):
@@ -65,11 +65,19 @@ class CurrencyRate(BaseModel):
             result_csv = []
 
             with Progress() as progress:
-                task1 = progress.add_task("[cyan]Processing...", total=len(self.target_country))
-
-                for i, (country, country_in_chinese) in enumerate(self.target_country.items()):
+                task1 = progress.add_task("[cyan]Processing...", total=len(self.target_countries))
+                for i, target_country in enumerate(self.target_countries):
                     func_num = i + 2
-                    target_url = f"https://www.bestxrate.com/card/mastercard/{country}.html"
+                    # {'Currency': 'USD', 'CurrencyName': '美金', 'Country': 'US', 'Country_Chinese': '美國'}
+                    country_en = target_country.get("Country")
+                    currency_name_en = target_country.get("Currency")
+
+                    country_chinese = target_country.get("Country_Chinese")
+                    currency_name_chinese = target_country.get("CurrencyName")
+
+                    target_url = (
+                        f"https://www.bestxrate.com/card/mastercard/{currency_name_en}.html"
+                    )
 
                     try:
                         await page.goto(target_url, timeout=3000)
@@ -85,8 +93,8 @@ class CurrencyRate(BaseModel):
                             timeout=3000
                         )
                         data = {
-                            "國家": country_in_chinese,
-                            "幣值": country,
+                            "國家": country_chinese,
+                            "幣值": currency_name_chinese,
                             "金額": 2990,
                             "更新時間": update_date,
                             "Visa匯率": visa,
@@ -98,8 +106,8 @@ class CurrencyRate(BaseModel):
                         }
                         result.append(data)
                         data_csv = {
-                            "Country": country_in_chinese,
-                            "Currency": country,
+                            "Country": country_chinese,
+                            "Currency": currency_name_en,
                             "Visa Currency": visa,
                             "Master Currency": master,
                             "JCB Currency": jcb,
@@ -107,14 +115,12 @@ class CurrencyRate(BaseModel):
                         }
                         result_csv.append(data_csv)
                     except Exception as e:
-                        print(
-                            f"{country_in_chinese} has an error, please check {target_url} \n {e}"
-                        )
+                        print(f"{country_chinese} has an error, please check {target_url} \n {e}")
 
                     progress.update(
                         task1,
                         completed=i + 1,
-                        description=Text(f"[cyan]Processing {country} {country_in_chinese}"),
+                        description=Text(f"[cyan]Processing {country_en} {country_chinese}"),
                     )
 
             result = pd.DataFrame(result)
@@ -131,7 +137,7 @@ if __name__ == "__main__":
     output_path = config.config_path.currency_rate_output_path
 
     async def main():
-        currency_rate = CurrencyRate(target_country=countries, output_path=output_path)
+        currency_rate = CurrencyRate(target_countries=countries, output_path=output_path)
         await currency_rate.get_default_country()
 
     asyncio.run(main())
