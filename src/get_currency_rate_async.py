@@ -58,7 +58,7 @@ class CurrencyRate(BaseModel):
         os.makedirs(self.output_path, exist_ok=True)
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True, timeout=3000)
+            browser = await p.chromium.launch(headless=True)
             page = await browser.new_page()
 
             result = []
