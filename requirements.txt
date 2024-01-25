@@ -1,7 +1,7 @@
 orjsonl
 orjson
 pandas
-playwright==1.17.2
+playwright==1.41.1
 pre-commit
 openpyxl
 pydantic
