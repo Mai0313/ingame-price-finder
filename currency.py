@@ -1,7 +1,7 @@
 import os
 
 from bs4 import BeautifulSoup
-from rich import Console
+from rich.console import Console
 import pandas as pd
 from pydantic import Field, BaseModel
 import requests
@@ -53,11 +53,11 @@ class CurrencyRate(BaseModel):
             response = requests.get(url)
             response.raise_for_status()
             result = self.parse_currency_rates(response.text)
+            return result
         except requests.exceptions.HTTPError as e:
             print(f"HTTP Error: {e}")  # noqa: T201
         except requests.exceptions.RequestException as e:
             print(f"Request Exception: {e}")  # noqa: T201
-        return result
 
 
 class DataParser(BaseModel):
@@ -74,7 +74,7 @@ class DataParser(BaseModel):
 
         final_result = pd.DataFrame()
         for country_name, country_code in country_code_dict.items():
-            console.print(f"Fetching currency rates for {country_name}...")
+            console.log(f"Fetching currency rates for {country_name}...")
             currency_rate = CurrencyRate(country_name=country_code)
             result = currency_rate.fetch_currency_rates()
             result = pd.DataFrame.from_dict(result)
