@@ -9,3 +9,9 @@ omegaconf
 rich
 google_play_scraper
 tqdm
+
+# Develop dependencies
+ipykernel
+ipywidgets
+pre-commit
+pytest

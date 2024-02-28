@@ -1,14 +1,14 @@
-import asyncio
 import os
 import re
+import asyncio
 
 import orjson
 import pandas as pd
-from omegaconf import OmegaConf
-from playwright.async_api import async_playwright
 from pydantic import BaseModel
-from rich.progress import Progress
+from omegaconf import OmegaConf
 from rich.text import Text
+from rich.progress import Progress
+from playwright.async_api import async_playwright
 
 
 def get_country_list():
@@ -117,7 +117,7 @@ class CurrencyRate(BaseModel):
                         }
                         result_csv.append(data_csv)
                     except Exception as e:
-                        print(f"{country_chinese} has an error, please check {target_url} \n {e}")
+                        print(f"{country_chinese} has an error, please check {target_url} \n {e}")  # noqa: T201
 
                     progress.update(
                         task1,

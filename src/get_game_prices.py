@@ -1,12 +1,12 @@
 import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+from tqdm import tqdm
 import orjson
 import pandas as pd
-from google_play_scraper import app
-from omegaconf import OmegaConf
 from pydantic import BaseModel
-from tqdm import tqdm
+from omegaconf import OmegaConf
+from google_play_scraper import app
 
 
 def get_game_list():
