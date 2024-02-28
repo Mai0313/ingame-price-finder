@@ -1,9 +1,12 @@
 import os
 
 from bs4 import BeautifulSoup
+from rich import Console
 import pandas as pd
 from pydantic import Field, BaseModel
 import requests
+
+console = Console()
 
 
 class CurrencyRate(BaseModel):
@@ -65,15 +68,17 @@ class DataParser(BaseModel):
         data = pd.read_csv(self.path)
         country_code_dict = {}
         for index, row in data.iterrows():
-            country_code_dict[row["Country"]] = row["Code"]
+            # 排除重複幣值 因為有些國家是用相同幣值
+            if row["Code"] not in country_code_dict.values():
+                country_code_dict[row["Country"]] = row["Code"]
 
         final_result = pd.DataFrame()
         for country_name, country_code in country_code_dict.items():
+            console.print(f"Fetching currency rates for {country_name}...")
             currency_rate = CurrencyRate(country_name=country_code)
             result = currency_rate.fetch_currency_rates()
             result = pd.DataFrame.from_dict(result)
             final_result = pd.concat([final_result, result])
-            break
 
         output_path_dir = os.path.dirname(self.output_path)
         os.makedirs(output_path_dir, exist_ok=True)
