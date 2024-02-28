@@ -51,7 +51,6 @@ class GameInfo(BaseModel):
 
 if __name__ == "__main__":
     country = "US"
-
     game_info = GameInfo(game_list_path="./configs/gameList.json")
     game_info = game_info.fetch_game_info(country=country, selected_games=None)
     game_info.to_csv("./data/game_info.csv", index=False)
