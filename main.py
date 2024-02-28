@@ -28,13 +28,13 @@ def main(country_currency: str):
     for country_code in country_details:
         console.log(f"Fetching game info for {country_code}")
         game_info = game_info.fetch_game_info(country=country_code, selected_games=None)
-        os.makedirs("./data/game_info", exit_ok=True)
+        os.makedirs("./data/game_info", exist_ok=True)
         game_info.to_csv(f"./data/game_info/{country_code}.csv", index=False)
         price_details = PriceDetails(
             country_currency=country_currency, game_info=f"./data/game_info/{country_code}.csv"
         )
         price_details = price_details.get_price_details()
-        os.makedirs("./data/price_details", exit_ok=True)
+        os.makedirs("./data/price_details", exist_ok=True)
         price_details.to_csv(f"./data/price_details/{country_code}.csv", index=False)
 
 

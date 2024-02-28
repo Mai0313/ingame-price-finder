@@ -1,21 +1,22 @@
-orjsonl
 orjson
 pandas
-playwright
-pre-commit
+pyarrow
 openpyxl
 pydantic
-omegaconf
 rich
 google_play_scraper
-tqdm
 
 # test develop
 requests
 beautifulsoup4
 
-# Develop dependencies
-ipykernel
-ipywidgets
-pre-commit
-pytest
+# # Develop dependencies
+# ipykernel
+# ipywidgets
+# pre-commit
+# pytest
+
+# # deprecated dependencies
+# playwright
+# omegaconf
+# tqdm
