@@ -10,11 +10,11 @@ google_play_scraper
 requests
 beautifulsoup4
 
-# # Develop dependencies
-# ipykernel
-# ipywidgets
-# pre-commit
-# pytest
+# Develop dependencies
+ipykernel
+ipywidgets
+pre-commit
+pytest
 
 # # deprecated dependencies
 # playwright
