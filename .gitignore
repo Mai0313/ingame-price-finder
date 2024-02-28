@@ -2,9 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
-# *.ipynb
-# *.csv
-# *.xlsx
 
 # C extensions
 *.so
@@ -163,4 +160,3 @@ cython_debug/
 #.idea/
 
 /data/
-/chrome-linux/
