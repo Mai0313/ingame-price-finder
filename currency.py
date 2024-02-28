@@ -1,3 +1,5 @@
+import os
+
 from bs4 import BeautifulSoup
 import pandas as pd
 from pydantic import Field, BaseModel
@@ -32,7 +34,7 @@ class CurrencyRate(BaseModel):
 
                 if self.country_name not in country_rates:
                     country_rates[self.country_name] = {
-                        "currency": self.country_name,
+                        "幣值": self.country_name,
                         "更新日期": date_info,
                         "JCB": None,
                         "萬事達": None,
@@ -57,6 +59,7 @@ class CurrencyRate(BaseModel):
 
 class DataParser(BaseModel):
     path: str = Field(..., title="Path", description="Path to the file")
+    output_path: str = Field(...)
 
     def get_country_code_dict(self):
         data = pd.read_csv(self.path)
@@ -70,8 +73,15 @@ class DataParser(BaseModel):
             result = currency_rate.fetch_currency_rates()
             result = pd.DataFrame.from_dict(result)
             final_result = pd.concat([final_result, result])
+            break
+
+        output_path_dir = os.path.dirname(self.output_path)
+        os.makedirs(output_path_dir, exist_ok=True)
+        final_result.to_csv(f"./{self.output_path}", index=False)
 
 
 if __name__ == "__main__":
-    data_parser = DataParser(path="./configs/countries_currency.csv")
-    data_parser.get_country_code_dict()
+    data_parser = DataParser(
+        path="./configs/countries_currency.csv", output_path="./data/currency_rates.csv"
+    )
+    result = data_parser.get_country_code_dict()
