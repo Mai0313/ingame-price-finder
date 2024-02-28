@@ -60,7 +60,6 @@ class GamePriceProcessor(BaseModel):
                 )
             ]
         price_df = pd.DataFrame(results, columns=["Game", "Country", "Price"])
-        # price_df["Price"] = price_df["Price"].str.split("-").str[-1].str.split(" ").str[1]
         return price_df
 
 

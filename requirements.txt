@@ -1,7 +1,7 @@
 orjsonl
 orjson
 pandas
-playwright==1.17.2
+playwright
 pre-commit
 openpyxl
 pydantic
@@ -9,6 +9,10 @@ omegaconf
 rich
 google_play_scraper
 tqdm
+
+# test develop
+requests
+beautifulsoup4
 
 # Develop dependencies
 ipykernel
