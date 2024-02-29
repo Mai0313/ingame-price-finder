@@ -23,13 +23,13 @@ def filter_games(selected_game):
 search_list = game_list_keys()
 
 with gr.Blocks() as demo:
-    selected_game = gr.Dropdown(choices=search_list, label="選擇遊戲", value="崩壞：星穹鐵道")
+    selected_game = gr.Dropdown(choices=search_list, label="選擇遊戲")
     game_info = gr.DataFrame(label="價格訊息")
 
     def update_game_info(selected_game):
         return filter_games(selected_game)
 
-    selected_game.change(update_game_info, inputs=[selected_game], outputs=[game_info])
+    selected_game.select(update_game_info, inputs=[selected_game], outputs=[game_info])
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=8081)
+    demo.launch(server_name="0.0.0.0", server_port=8081, debug=True)

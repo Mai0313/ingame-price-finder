@@ -48,7 +48,7 @@ def extract_data(root_path: str):
         search_dict[name] = cleaned_name
         group.to_csv(f"./{output_path}/{cleaned_name}.csv", index=False)
     search_dict = orjson.dumps(search_dict)
-    with open("./search_dict.jsonl", "wb") as f:
+    with open("./data/search_dict.json", "wb") as f:
         f.write(search_dict)
 
 
@@ -68,7 +68,10 @@ def main(country_currency: str):
         if not os.path.exists(game_info_path):
             console.log(f"Fetching game info for {country_code}")
             game_info = game_info_grabber.fetch_game_info_parallel(country=country_code)
-            game_info.to_csv(game_info_path, index=False)
+            if game_info.empty:
+                continue
+            else:
+                game_info.to_csv(game_info_path, index=False)
         if not os.path.exists(price_details_path):
             price_details = PriceDetails(
                 country_currency=country_currency, game_info=game_info_path
