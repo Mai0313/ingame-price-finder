@@ -75,6 +75,7 @@ def main(country_currency: str):
             )
             price_details = price_details.get_price_details()
             price_details.to_csv(price_details_path, index=False)
+    extract_data(root_path="./data/price_details")
 
 
 if __name__ == "__main__":
