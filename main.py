@@ -4,7 +4,8 @@ import pandas as pd
 from rich.console import Console
 from src.currency import CurrencyRate
 from src.game_info import GameInfo
-from src.price_details import PriceDetails
+
+from datamodule import PriceDetails
 
 console = Console()
 
