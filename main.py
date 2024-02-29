@@ -23,23 +23,22 @@ def prepare_currency():
 
 def main(country_currency: str):
     game_info_grabber = GameInfo(game_list_path="./configs/gameList.json")
-    country_details = pd.read_csv("./configs/countries_currency.csv")["CountryCode"].values
+    country_details = pd.read_csv("./configs/countries_currency.csv")
+    country_details = country_details.dropna(subset=["CountryCode"])
     os.makedirs("./data/game_info", exist_ok=True)
     os.makedirs("./data/price_details", exist_ok=True)
 
-    for country_code in country_details:
+    for index, row in country_details.iterrows():
+        country_code = row["CountryCode"]
         game_info_path = f"./data/game_info/{country_code}.csv"
         price_details_path = f"./data/price_details/{country_code}.csv"
-
         if not os.path.exists(game_info_path):
             console.log(f"Fetching game info for {country_code}")
             game_info = game_info_grabber.fetch_game_info(
                 country=country_code, selected_games=None
             )
             game_info.to_csv(game_info_path, index=False)
-
         if not os.path.exists(price_details_path):
-            console.log(f"Fetching price details for {country_code}")
             price_details = PriceDetails(
                 country_currency=country_currency, game_info=game_info_path
             )
