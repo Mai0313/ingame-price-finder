@@ -5,6 +5,10 @@ openpyxl
 pydantic
 rich
 google_play_scraper
+gradio
+deep-translator
+deep-translator[docx]
+deep-translator[pdf]
 
 # test develop
 requests

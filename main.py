@@ -1,11 +1,14 @@
 import os
+import re
+from pathlib import Path
 
+import orjson
 import pandas as pd
 from rich.console import Console
 from src.currency import CurrencyRate
 from src.game_info import GameInfo
-
 from src.datamodule import PriceDetails
+from deep_translator import GoogleTranslator
 
 console = Console()
 
@@ -20,6 +23,33 @@ def prepare_currency():
     country_currency = country_currency.get_country_currency()
     country_currency.to_csv(output_path, index=False)
     return output_path
+
+
+def extract_data(root_path: str):
+    filenames = Path(root_path).rglob("*.csv")
+    game_info = pd.DataFrame()
+    for filename in filenames:
+        data = pd.read_csv(filename)
+        data = data.dropna(subset=["Name"])
+        game_info = pd.concat([game_info, data], axis=0)
+
+    filenames = Path(root_path).rglob("*.csv")
+    parent_dir = Path(root_path).parent
+    output_path = f"./{parent_dir}/final_data"
+    os.makedirs(output_path, exist_ok=True)
+    data = pd.concat([pd.read_csv(filename) for filename in filenames], ignore_index=True)
+    groups = data.groupby("Name")
+
+    search_dict = {}
+    for name, group in groups:
+        group = group.dropna()
+        cleaned_name = re.sub(r"[^\w\s]", "", name)
+        cleaned_name = re.sub(r"\s+", "_", cleaned_name)
+        search_dict[name] = cleaned_name
+        group.to_csv(f"./{output_path}/{cleaned_name}.csv", index=False)
+    search_dict = orjson.dumps(search_dict)
+    with open("./search_dict.jsonl", "wb") as f:
+        f.write(search_dict)
 
 
 def main(country_currency: str):
