@@ -8,6 +8,7 @@ import pandas as pd
 from pydantic import Field, BaseModel, computed_field, model_validator
 from price_parser import Price
 from google_play_scraper import app
+import multiprocessing as mp
 
 
 class GameInfo(BaseModel):
@@ -46,7 +47,7 @@ class GameInfo(BaseModel):
 
     def fetch_game_info_parallel(self, country: str) -> pd.DataFrame:
         game_lists = self.game_lists[: self.limit] if self.limit else self.game_lists
-        with ProcessPoolExecutor() as executor:
+        with ProcessPoolExecutor(max_workers=mp.cpu_count()) as executor:
             futures = {
                 executor.submit(self.fetch_single_game_info, game_data=game, country=country): game
                 for game in game_lists

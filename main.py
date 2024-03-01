@@ -66,7 +66,6 @@ def main(country_currency: str):
         game_info_path = f"./data/game_info/{country_code}.csv"
         price_details_path = f"./data/price_details/{country_code}.csv"
         if not os.path.exists(game_info_path):
-            console.log(f"Fetching game info for {country_code}")
             game_info = game_info_grabber.fetch_game_info_parallel(country=country_code)
             if game_info.empty:
                 continue
