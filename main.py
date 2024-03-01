@@ -71,12 +71,11 @@ def main(country_currency: str):
                 continue
             else:
                 game_info.to_csv(game_info_path, index=False)
-        if not os.path.exists(price_details_path):
-            price_details = PriceDetails(
-                country_currency=country_currency, game_info=game_info_path
-            )
-            price_details = price_details.get_price_details()
-            price_details.to_csv(price_details_path, index=False)
+        # if not os.path.exists(price_details_path):
+        price_details = PriceDetails(country_currency=country_currency, game_info=game_info_path)
+        price_details = price_details.get_price_details()
+        price_details = price_details.drop_duplicates()
+        price_details.to_csv(price_details_path, index=False)
     extract_data(root_path="./data/price_details")
 
 

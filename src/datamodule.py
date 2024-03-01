@@ -28,8 +28,7 @@ class PriceDetails(BaseModel):
             ]
         ]
 
-        card_types = ["JCB", "萬事達", "VISA"]
-        for card_type in card_types:
-            price_details[f"{card_type}"] = price_details[card_type] * price_details["lowest"]
-            price_details[f"{card_type}"] = price_details[card_type] * price_details["highest"]
+        price_details["JCB"] = price_details["JCB"] * price_details["highest"]
+        price_details["萬事達"] = price_details["萬事達"] * price_details["highest"]
+        price_details["VISA"] = price_details["VISA"] * price_details["highest"]
         return price_details

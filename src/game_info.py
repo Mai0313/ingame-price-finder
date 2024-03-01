@@ -1,5 +1,6 @@
 import re
 from typing import Union, Optional
+import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from tqdm import tqdm  # Ensure you have tqdm installed
@@ -8,7 +9,6 @@ import pandas as pd
 from pydantic import Field, BaseModel, computed_field, model_validator
 from price_parser import Price
 from google_play_scraper import app
-import multiprocessing as mp
 
 
 class GameInfo(BaseModel):
@@ -39,8 +39,8 @@ class GameInfo(BaseModel):
             price = app(game_id, lang="en", country=country)["inAppProductPrice"]
             price = price.replace(" per item", "")
             lowest, highest = price.split(" - ")
-            lowest = Price.fromstring(lowest).amount
-            highest = Price.fromstring(highest).amount
+            lowest = Price.fromstring(lowest).amount_float
+            highest = Price.fromstring(highest).amount_float
             return {"Name": game_name, "country": country, "lowest": lowest, "highest": highest}
         except Exception:
             return None
