@@ -13,5 +13,6 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+    entrypoint: ["/bin/true"]
     volumes:
       - .:/app
