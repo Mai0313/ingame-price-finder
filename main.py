@@ -1,10 +1,10 @@
 import os
+
 import pandas as pd
+from src.datamodule import DataBaseManager
 from deep_translator import GoogleTranslator
 from src.ingame_price import GameInfo
 from src.utils.clean_name import clean_game_name
-
-from src.datamodule import DataBaseManager
 
 
 def update_all_data():

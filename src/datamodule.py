@@ -3,8 +3,8 @@ import datetime
 
 import pandas as pd
 from pydantic import Field, BaseModel, ConfigDict, computed_field
-from src.ingame_price import GameInfo
 from src.currency import CurrencyRate
+from src.ingame_price import GameInfo
 
 
 class DataBaseManager(BaseModel):
@@ -49,12 +49,14 @@ class DataBaseManager(BaseModel):
             else:
                 currency_rate = CurrencyRate(path="./configs/countries_currency.csv")
                 currency_rate = currency_rate.get_country_currency()
+                currency_rate["database_updated_date"] = now
                 currency_rate.to_sql(
                     "currency_rates", self.get_connection, index=False, if_exists="replace"
                 )
         else:
             currency_rate = CurrencyRate(path="./configs/countries_currency.csv")
             currency_rate = currency_rate.get_country_currency()
+            currency_rate["database_updated_date"] = now
             currency_rate.to_sql(
                 "currency_rates", self.get_connection, index=False, if_exists="replace"
             )
@@ -88,4 +90,3 @@ if __name__ == "__main__":
     database_name = "./data/ingame_price.db"
     db_manager = DataBaseManager(database_name=database_name)
     data = db_manager.update_ingame_price(table_name=table_name)
-    print(data)
