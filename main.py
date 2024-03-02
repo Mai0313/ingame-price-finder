@@ -41,15 +41,17 @@ def prepare_game_info(target_game: str):
 
 def update_all_data():
     game_data = pd.read_csv("./configs/game_data.csv")
-    for index, game in game_data.iterrows():
+
+    search_dict = {}
+    for _, game in game_data.iterrows():
         target_game = game["name"]
         cleaned_name = clean_game_name(target_game)
-        game_info_df = prepare_game_info(target_game=target_game)
+        prepare_game_info(target_game=target_game)
 
-        search_dict = {target_game: cleaned_name}
-        search_dict = orjson.dumps(search_dict)
-        with open("./data/search_dict.json", "wb") as f:
-            f.write(search_dict)
+        search_dict[target_game] = cleaned_name
+    search_dict = orjson.dumps(search_dict)
+    with open("./data/search_dict.json", "wb") as f:
+        f.write(search_dict)
 
 
 if __name__ == "__main__":

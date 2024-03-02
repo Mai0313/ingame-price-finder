@@ -13,7 +13,7 @@ def game_list_keys() -> list[str]:
 def filter_games(selected_game):
     with open("./data/search_dict.json", "rb") as f:
         search_dict = orjson.loads(f.read())  # type: dict[str, str]
-    game_info_path = f"./data/final_data/{search_dict[selected_game]}.csv"
+    game_info_path = f"./data/game_info/{search_dict[selected_game]}.csv"
     game_info_data = pd.read_csv(game_info_path)
     game_info_data = game_info_data.query("JCB > 0 and 萬事達 > 0 and VISA > 0")
     game_info_data = game_info_data.sort_values(by=["JCB", "萬事達", "VISA"], ascending=True)

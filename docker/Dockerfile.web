@@ -1,0 +1,12 @@
+FROM python:3.9.15-slim
+
+RUN apt update
+RUN apt install git wget curl -y
+
+RUN python -m pip install --upgrade pip
+
+WORKDIR /app
+COPY . /app
+RUN pip install -r requirements.txt
+EXPOSE 8081
+CMD ["python", "app.py"]
