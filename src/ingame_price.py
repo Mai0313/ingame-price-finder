@@ -47,8 +47,8 @@ class GameInfo(BaseModel):
         game_name (str): this is the name of the game
         """
         try:
-            price = app(game_id, lang="en", country=country)["inAppProductPrice"]  # type: str
-            price = price.replace(" per item", "")
+            price = app(game_id, lang="zh-TW", country=country)["inAppProductPrice"]  # type: str
+            price = price.replace("每個項目 ", "")
             lowest, highest = price.split(" - ")
             lowest = Price.fromstring(lowest).amount_float
             highest = Price.fromstring(highest).amount_float

@@ -5,6 +5,7 @@ import pandas as pd
 from pydantic import Field, BaseModel, ConfigDict, computed_field
 from src.currency import CurrencyRate
 from src.ingame_price import GameInfo
+from src.utils.clean_name import clean_game_name
 
 
 class DataBaseManager(BaseModel):
@@ -27,15 +28,13 @@ class DataBaseManager(BaseModel):
         return table_names_
 
     def save_table(self, table_name: str, data: pd.DataFrame) -> pd.DataFrame:
-        data.to_sql(f"{table_name}", self.get_connection, index=False, if_exists="replace")
+        if not data.empty:
+            data.to_sql(f"{table_name}", self.get_connection, index=False, if_exists="replace")
         return data
 
     def read_table(self, table_name: str) -> pd.DataFrame:
-        if table_name in self.table_names:
-            data = pd.read_sql_query(f"SELECT * FROM '{table_name}'", self.get_connection)
-            return data
-        else:
-            raise ValueError(f"Table name '{table_name}' not found in the database")
+        data = pd.read_sql_query(f"SELECT * FROM '{table_name}'", self.get_connection)
+        return data
 
     @computed_field
     @property
