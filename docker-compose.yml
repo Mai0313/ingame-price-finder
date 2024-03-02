@@ -9,10 +9,10 @@ services:
     volumes:
       - .:/app
 
-  ingame-price-main:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    entrypoint: ["/bin/true"]
-    volumes:
-      - .:/app
+  # ingame-price-main:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/Dockerfile
+  #   entrypoint: ["/bin/true"]
+  #   volumes:
+  #     - .:/app
