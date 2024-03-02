@@ -26,16 +26,16 @@ class DataBaseManager(BaseModel):
         table_names_ = table_names_["name"].values.tolist()
         return table_names_
 
-    def save_table(self, data: pd.DataFrame) -> pd.DataFrame:
-        data.to_sql(data, self.get_connection, index=False, if_exists="replace")
+    def save_table(self, table_name: str, data: pd.DataFrame) -> pd.DataFrame:
+        data.to_sql(f"{table_name}", self.get_connection, index=False, if_exists="replace")
         return data
 
     def read_table(self, table_name: str) -> pd.DataFrame:
         if table_name in self.table_names:
-            data = pd.read_sql_query(f"SELECT * FROM {table_name}", self.get_connection)
+            data = pd.read_sql_query(f"SELECT * FROM '{table_name}'", self.get_connection)
             return data
         else:
-            raise ValueError(f"Table name {table_name} not found in the database")
+            raise ValueError(f"Table name '{table_name}' not found in the database")
 
     @computed_field
     @property
@@ -73,13 +73,13 @@ class DataBaseManager(BaseModel):
                 game_info_instance = GameInfo(target_game=table_name)
                 game_info_data = game_info_instance.fetch_data(country_currency=self.currency_rate)
                 game_info_data["database_updated_date"] = now
-                self.save_table(game_info_data)
+                self.save_table(table_name=table_name, data=game_info_data)
                 return game_info_data
         else:
             game_info_instance = GameInfo(target_game=table_name)
             game_info_data = game_info_instance.fetch_data(country_currency=self.currency_rate)
             game_info_data["database_updated_date"] = now
-            self.save_table(game_info_data)
+            self.save_table(table_name=table_name, data=game_info_data)
             return game_info_data
 
 
