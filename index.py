@@ -226,6 +226,7 @@ demo.launch(
     server_port=7860,
     show_api=False,
     debug=True,
-    auth_message=auth_message,
-    auth=auth,
+    # auth_message=auth_message,
+    # auth=auth,
+    root_path="/seller",
 )
