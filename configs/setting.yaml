@@ -1,9 +1,0 @@
-engine_setting:
-  parallel_countries: true
-  parallel_games: true
-
-config_path:
-  country_list: ./configs/currencyRate.json
-  currency_rate_output_path: ./data/currency_rate
-  game_list: ./configs/gameList.json
-  games_price_output_path: ./data/games_price

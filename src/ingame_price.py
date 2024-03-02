@@ -1,4 +1,4 @@
-import re
+import os
 from typing import Union, Optional
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -8,7 +8,6 @@ from pydantic import Field, BaseModel, computed_field, model_validator
 from price_parser import Price
 from rich.progress import Progress
 from google_play_scraper import app
-from src.utils.datamodule import PriceDetails
 
 
 class GameInfo(BaseModel):
@@ -57,7 +56,54 @@ class GameInfo(BaseModel):
         except Exception:
             return {"Name": game_name, "country": country, "lowest": None, "highest": None}
 
-    def fetch_game_info_parallel(self) -> pd.DataFrame:
+    @classmethod
+    def get_price_details(
+        cls, country_currency: pd.DataFrame, game_info: pd.DataFrame
+    ) -> pd.DataFrame:
+        price_details = pd.merge(
+            country_currency, game_info, left_on="CountryCode", right_on="country", how="left"
+        )
+        price_details = price_details[
+            [
+                "Name",
+                "country",
+                "CountryCode",
+                "Currency",
+                "Currency_CN",
+                "Updated_date",
+                "lowest",
+                "highest",
+                "JCB",
+                "萬事達",
+                "VISA",
+            ]
+        ]
+
+        price_details["JCB 最高價"] = price_details["JCB"] * price_details["highest"]
+        price_details["萬事達 最高價"] = price_details["萬事達"] * price_details["highest"]
+        price_details["VISA 最高價"] = price_details["VISA"] * price_details["highest"]
+
+        price_details["JCB 最低價"] = price_details["JCB"] * price_details["lowest"]
+        price_details["萬事達 最低價"] = price_details["萬事達"] * price_details["lowest"]
+        price_details["VISA 最低價"] = price_details["VISA"] * price_details["lowest"]
+
+        price_details = price_details.drop(["JCB", "萬事達", "VISA", "country"], axis=1)
+        price_details = price_details.drop_duplicates()
+        price_details = price_details.dropna(
+            subset=[
+                "Name",
+                "JCB 最高價",
+                "萬事達 最高價",
+                "VISA 最高價",
+                "JCB 最低價",
+                "萬事達 最低價",
+                "VISA 最低價",
+            ],
+            how="any",
+        )
+        return price_details
+
+    def fetch_data(self, country_currency: Optional[pd.DataFrame] = None) -> pd.DataFrame:
         target_game_name, target_game_id = self.game_details
         game_information = []
         # change to rich progress bar
@@ -81,23 +127,16 @@ class GameInfo(BaseModel):
                     progress.update(task, advance=1)
         game_information = pd.DataFrame(game_information)
         game_information = game_information.dropna(subset=["lowest", "highest"])
-        return game_information
 
-    def postprocess_game_info(
-        self, game_info_result: pd.DataFrame, country_currency: pd.DataFrame
-    ):
-        ingame_price = PriceDetails(
-            country_currency=country_currency, game_info=game_info_result
-        ).get_price_details()
-        return ingame_price
+        if country_currency is not None:
+            game_information = self.get_price_details(
+                country_currency=country_currency, game_info=game_information
+            )
+        return game_information
 
 
 if __name__ == "__main__":
     target_game = "原神"
-    game_info_instance = GameInfo(target_game=target_game)
-    game_info_df = game_info_instance.fetch_game_info_parallel()
     country_currency = pd.read_csv("./data/currency_rates.csv")
-    game_info_df = game_info_instance.postprocess_game_info(
-        game_info_result=game_info_df, country_currency=country_currency
-    )
-    game_info_df.to_csv(f"./data/{target_game}.csv", index=False)
+    game_info_instance = GameInfo(target_game=target_game)
+    game_info_df = game_info_instance.fetch_data(country_currency=country_currency)

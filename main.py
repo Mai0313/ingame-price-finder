@@ -11,33 +11,23 @@ from src.utils.clean_name import clean_game_name
 
 
 def prepare_currency():
-    pass
-    # output_path = "./data/currency_rates.csv"
-    # if os.path.exists(output_path):
-    #     return output_path
-    # root_path = os.path.dirname(output_path)
-    # os.makedirs(root_path, exist_ok=True)
-    # country_currency = CurrencyRate(path="./configs/countries_currency.csv")
-    # country_currency = country_currency.get_country_currency()
-    # country_currency.to_csv(output_path, index=False)
-    # return country_currency
+    os.makedirs("./data", exist_ok=True)
+    output_path = "./data/currency_rates.csv"
+    country_currency = CurrencyRate(path="./configs/countries_currency.csv").get_country_currency()
+    country_currency.to_csv(output_path, index=False)
+    return country_currency
 
 
-def prepare_game_info(target_game: str):
+def prepare_game_info(target_game: str, target_game_id: str):
     cleaned_name = clean_game_name(target_game)
     output_folder = "./data/game_info"
     os.makedirs(output_folder, exist_ok=True)
     if os.path.exists(f"{output_folder}/{cleaned_name}.csv"):
-        game_info_df = pd.read_csv(f"{output_folder}/{cleaned_name}.csv")
-        return game_info_df
-    game_info_instance = GameInfo(target_game=target_game)
-    game_info_df = game_info_instance.fetch_game_info_parallel()
-    country_currency = pd.read_csv("./data/currency_rates.csv")
-    game_info_df = game_info_instance.postprocess_game_info(
-        game_info_result=game_info_df, country_currency=country_currency
-    )
-    game_info_df.to_csv(f"{output_folder}/{cleaned_name}.csv", index=False)
-    return game_info_df
+        game_info_data = pd.read_csv(f"{output_folder}/{cleaned_name}.csv")
+        return game_info_data
+    game_info_data = GameInfo(target_game=target_game).fetch_data()
+    game_info_data.to_csv(f"{output_folder}/{target_game_id}.csv", index=False)
+    return game_info_data
 
 
 def update_all_data():
@@ -46,7 +36,8 @@ def update_all_data():
     search_dict = {}
     for _, game in game_data.iterrows():
         target_game = game["name"]
-        cleaned_name = clean_game_name(target_game)
+        target_game_id = game["packageId"]
+        cleaned_name = clean_game_name(target_game, target_game_id)
         prepare_game_info(target_game=target_game)
 
         search_dict[target_game] = cleaned_name
