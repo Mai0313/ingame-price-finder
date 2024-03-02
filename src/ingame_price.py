@@ -29,7 +29,7 @@ class GameInfo(BaseModel):
     @property
     def game_details(self) -> tuple[str, Union[str, None]]:
         game_data = pd.read_csv("./configs/game_data.csv")
-        game_data = game_data.query("@self.target_game in name")
+        game_data = game_data.query("@self.target_game in name or @self.target_game in packageId")
         if not game_data.empty:
             game_name = game_data["name"].values[0]
             game_id = game_data["packageId"].values[0]

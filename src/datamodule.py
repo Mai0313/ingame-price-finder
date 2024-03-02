@@ -50,16 +50,16 @@ class DataBaseManager(BaseModel):
                 currency_rate = CurrencyRate(path="./configs/countries_currency.csv")
                 currency_rate = currency_rate.get_country_currency()
                 currency_rate["database_updated_date"] = now
-                currency_rate.to_sql(
-                    "currency_rates", self.get_connection, index=False, if_exists="replace"
-                )
+                self.save_table("currency_rates", currency_rate)
+                # Save for pytest or dev purposes
+                currency_rate.to_csv("./data/currency_rates.csv", index=False)
         else:
             currency_rate = CurrencyRate(path="./configs/countries_currency.csv")
             currency_rate = currency_rate.get_country_currency()
             currency_rate["database_updated_date"] = now
-            currency_rate.to_sql(
-                "currency_rates", self.get_connection, index=False, if_exists="replace"
-            )
+            self.save_table("currency_rates", currency_rate)
+            # Save for pytest or dev purposes
+            currency_rate.to_csv("./data/currency_rates.csv", index=False)
         return currency_rate
 
     def update_ingame_price(self, table_name: str) -> pd.DataFrame:

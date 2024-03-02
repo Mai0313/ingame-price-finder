@@ -15,7 +15,7 @@ def update_all_data():
         target_game = game["name"]
         target_game_id = game["packageId"]
         dataloader = DataBaseManager(database_name="./data/ingame_price.db")
-        dataloader.update_ingame_price(table_name=target_game_id)
+        dataloader.update_ingame_price(table_name=target_game)
         # cleaned_name = clean_game_name(target_game, target_game_id)
         # prepare_game_info(target_game=target_game)
 
