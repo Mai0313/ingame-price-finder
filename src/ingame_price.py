@@ -48,9 +48,7 @@ class GameInfo(BaseModel):
         game_name (str): this is the name of the game
         """
         try:
-            # print(game_id, country)
             price = app(game_id, lang="zh-TW", country=country)["inAppProductPrice"]  # type: str
-            print(game_id, country, price)
             price = price.replace("每個項目 ", "")
             lowest, highest = price.split(" - ")
             lowest = Price.fromstring(lowest).amount_float
@@ -113,7 +111,6 @@ class GameInfo(BaseModel):
         if self.target_game_id is None:
             self.target_game, self.target_game_id = self.game_details
         game_information = []
-        # change to rich progress bar
         with Progress() as progress:
             task = progress.add_task(
                 f"Fetching {self.target_game} information", total=len(self.country_codes)

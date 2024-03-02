@@ -6,6 +6,7 @@ pydantic
 rich
 google_play_scraper
 gradio
+gradio[oauth]
 deep-translator
 deep-translator[docx]
 deep-translator[pdf]

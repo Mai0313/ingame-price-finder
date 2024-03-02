@@ -27,9 +27,11 @@ class DataBaseManager(BaseModel):
         table_names_ = table_names_["name"].values.tolist()
         return table_names_
 
-    def save_table(self, table_name: str, data: pd.DataFrame) -> pd.DataFrame:
+    def save_table(
+        self, table_name: str, data: pd.DataFrame, mode: Optional[str] = "replace"
+    ) -> pd.DataFrame:
         if not data.empty:
-            data.to_sql(f"{table_name}", self.get_connection, index=False, if_exists="replace")
+            data.to_sql(f"{table_name}", self.get_connection, index=False, if_exists=mode)
         return data
 
     def read_table(self, table_name: str) -> pd.DataFrame:
