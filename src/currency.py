@@ -46,7 +46,7 @@ class CurrencyRate(BaseModel):
             currency_results = pd.concat([currency_results, currency_result])
 
         currency_results = self.__combine_currency_rates(original_data, currency_results)
-        currency_results = currency_results.dropna(subset=["Currency"])
+        # currency_results = currency_results.dropna(subset=["Currency"])
         return currency_results
 
 

@@ -53,6 +53,7 @@ class DataBaseManager(BaseModel):
                 self.save_table("currency_rates", currency_rate)
                 # Save for pytest or dev purposes
                 currency_rate.to_csv("./data/currency_rates.csv", index=False)
+                return currency_rate
         else:
             currency_rate = CurrencyRate(path="./configs/countries_currency.csv")
             currency_rate = currency_rate.get_country_currency()
@@ -60,7 +61,7 @@ class DataBaseManager(BaseModel):
             self.save_table("currency_rates", currency_rate)
             # Save for pytest or dev purposes
             currency_rate.to_csv("./data/currency_rates.csv", index=False)
-        return currency_rate
+            return currency_rate
 
     def update_ingame_price(self, table_name: str) -> pd.DataFrame:
         """這裡的table name可以是遊戲名稱 或是 任何名稱"""

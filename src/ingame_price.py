@@ -78,6 +78,9 @@ class GameInfo(BaseModel):
                 "VISA",
             ]
         ]
+        price_details["JCB"] = price_details["JCB"].astype(float)
+        price_details["萬事達"] = price_details["萬事達"].astype(float)
+        price_details["VISA"] = price_details["VISA"].astype(float)
 
         price_details["JCB 最高價"] = price_details["JCB"] * price_details["highest"]
         price_details["萬事達 最高價"] = price_details["萬事達"] * price_details["highest"]
