@@ -13,6 +13,7 @@ deep-translator[pdf]
 # project related
 date-parser
 price_parser
+autorootcwd
 
 # test develop
 requests

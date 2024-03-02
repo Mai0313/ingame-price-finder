@@ -4,13 +4,10 @@ from pathlib import Path
 
 import orjson
 import pandas as pd
-from rich.console import Console
 from src.currency import CurrencyRate
-from src.game_info import GameInfo
-from src.datamodule import PriceDetails
 from deep_translator import GoogleTranslator
-
-console = Console()
+from src.ingame_price import GameInfo
+from src.utils.clean_name import clean_game_name
 
 
 def prepare_currency():
@@ -22,63 +19,39 @@ def prepare_currency():
     country_currency = CurrencyRate(path="./configs/countries_currency.csv")
     country_currency = country_currency.get_country_currency()
     country_currency.to_csv(output_path, index=False)
-    return output_path
+    return country_currency
 
 
-def extract_data(root_path: str):
-    filenames = Path(root_path).rglob("*.csv")
-    game_info = pd.DataFrame()
-    for filename in filenames:
-        data = pd.read_csv(filename)
-        data = data.dropna(subset=["Name"])
-        game_info = pd.concat([game_info, data], axis=0)
-
-    filenames = Path(root_path).rglob("*.csv")
-    parent_dir = Path(root_path).parent
-    output_path = f"./{parent_dir}/final_data"
-    os.makedirs(output_path, exist_ok=True)
-    data = pd.concat([pd.read_csv(filename) for filename in filenames], ignore_index=True)
-    groups = data.groupby("Name")
-
-    search_dict = {}
-    for name, group in groups:
-        group = group.dropna()
-        cleaned_name = re.sub(r"[^\w\s]", "", name)
-        cleaned_name = re.sub(r"\s+", "_", cleaned_name)
-        search_dict[name] = cleaned_name
-        group.to_csv(f"./{output_path}/{cleaned_name}.csv", index=False)
-    search_dict = orjson.dumps(search_dict)
-    with open("./data/search_dict.json", "wb") as f:
-        f.write(search_dict)
-
-
-def main(country_currency: str):
-    game_info_grabber = GameInfo(
-        game_list_path="./configs/gameList.json", custom_games=None, limit=None
+def prepare_game_info(target_game: str):
+    cleaned_name = clean_game_name(target_game)
+    output_folder = "./data/game_info"
+    os.makedirs(output_folder, exist_ok=True)
+    if os.path.exists(f"{output_folder}/{cleaned_name}.csv"):
+        game_info_df = pd.read_csv(f"{output_folder}/{cleaned_name}.csv")
+        return game_info_df
+    game_info_instance = GameInfo(target_game=target_game)
+    game_info_df = game_info_instance.fetch_game_info_parallel()
+    country_currency = pd.read_csv("./data/currency_rates.csv")
+    game_info_df = game_info_instance.postprocess_game_info(
+        game_info_result=game_info_df, country_currency=country_currency
     )
-    country_details = pd.read_csv("./configs/countries_currency.csv")
-    country_details = country_details.dropna(subset=["CountryCode"])
-    os.makedirs("./data/game_info", exist_ok=True)
-    os.makedirs("./data/price_details", exist_ok=True)
+    game_info_df.to_csv(f"{output_folder}/{cleaned_name}.csv", index=False)
+    return game_info_df
 
-    for index, row in country_details.iterrows():
-        country_code = row["CountryCode"]
-        game_info_path = f"./data/game_info/{country_code}.csv"
-        price_details_path = f"./data/price_details/{country_code}.csv"
-        if not os.path.exists(game_info_path):
-            game_info = game_info_grabber.fetch_game_info_parallel(country=country_code)
-            if game_info.empty:
-                continue
-            else:
-                game_info.to_csv(game_info_path, index=False)
-        # if not os.path.exists(price_details_path):
-        price_details = PriceDetails(country_currency=country_currency, game_info=game_info_path)
-        price_details = price_details.get_price_details()
-        price_details = price_details.drop_duplicates()
-        price_details.to_csv(price_details_path, index=False)
-    extract_data(root_path="./data/price_details")
+
+def update_all_data():
+    game_data = pd.read_csv("./configs/game_data.csv")
+    for index, game in game_data.iterrows():
+        target_game = game["name"]
+        cleaned_name = clean_game_name(target_game)
+        game_info_df = prepare_game_info(target_game=target_game)
+
+        search_dict = {target_game: cleaned_name}
+        search_dict = orjson.dumps(search_dict)
+        with open("./data/search_dict.json", "wb") as f:
+            f.write(search_dict)
 
 
 if __name__ == "__main__":
     country_currency = prepare_currency()
-    main(country_currency=country_currency)
+    update_all_data()
