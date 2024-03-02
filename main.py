@@ -11,15 +11,16 @@ from src.utils.clean_name import clean_game_name
 
 
 def prepare_currency():
-    output_path = "./data/currency_rates.csv"
-    if os.path.exists(output_path):
-        return output_path
-    root_path = os.path.dirname(output_path)
-    os.makedirs(root_path, exist_ok=True)
-    country_currency = CurrencyRate(path="./configs/countries_currency.csv")
-    country_currency = country_currency.get_country_currency()
-    country_currency.to_csv(output_path, index=False)
-    return country_currency
+    pass
+    # output_path = "./data/currency_rates.csv"
+    # if os.path.exists(output_path):
+    #     return output_path
+    # root_path = os.path.dirname(output_path)
+    # os.makedirs(root_path, exist_ok=True)
+    # country_currency = CurrencyRate(path="./configs/countries_currency.csv")
+    # country_currency = country_currency.get_country_currency()
+    # country_currency.to_csv(output_path, index=False)
+    # return country_currency
 
 
 def prepare_game_info(target_game: str):

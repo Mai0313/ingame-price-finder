@@ -1,3 +1,4 @@
+from main import prepare_currency
 import gradio as gr
 import orjson
 import pandas as pd
@@ -18,11 +19,18 @@ def filter_games(selected_game):
     return game_info_data
 
 
+def update_currency():
+    prepare_currency()
+    return "更新完成"
+
+
 search_list = game_list_keys()
 
 with gr.Blocks() as demo:
     selected_game = gr.Dropdown(choices=search_list, label="選擇遊戲")
     game_info = gr.DataFrame(label="價格訊息")
+    gr.Button(update_currency, value="更新匯率資訊")
+    # gr.ChatInterface
 
     def update_game_info(selected_game):
         return filter_games(selected_game)
