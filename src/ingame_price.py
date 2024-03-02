@@ -16,6 +16,7 @@ class GameInfo(BaseModel):
         title="Target Game",
         description="The name of the game you want to fetch the information for",
     )
+    target_game_id: Optional[str] = Field(default=None)
 
     @computed_field
     @property
@@ -47,7 +48,9 @@ class GameInfo(BaseModel):
         game_name (str): this is the name of the game
         """
         try:
+            # print(game_id, country)
             price = app(game_id, lang="zh-TW", country=country)["inAppProductPrice"]  # type: str
+            print(game_id, country, price)
             price = price.replace("每個項目 ", "")
             lowest, highest = price.split(" - ")
             lowest = Price.fromstring(lowest).amount_float
@@ -107,19 +110,20 @@ class GameInfo(BaseModel):
         return price_details
 
     def fetch_data(self, country_currency: Optional[pd.DataFrame] = None) -> pd.DataFrame:
-        target_game_name, target_game_id = self.game_details
+        if self.target_game_id is None:
+            self.target_game, self.target_game_id = self.game_details
         game_information = []
         # change to rich progress bar
         with Progress() as progress:
             task = progress.add_task(
-                f"Fetching {target_game_name} information", total=len(self.country_codes)
+                f"Fetching {self.target_game} information", total=len(self.country_codes)
             )
             with ProcessPoolExecutor(max_workers=mp.cpu_count()) as executor:
                 futures = [
                     executor.submit(
                         self.fetch_single_game_info,
-                        game_id=target_game_id,
-                        game_name=target_game_name,
+                        game_id=self.target_game_id,
+                        game_name=self.target_game,
                         country=country_code,
                     )
                     for country_code in self.country_codes

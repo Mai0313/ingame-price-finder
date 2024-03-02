@@ -5,7 +5,7 @@ from google_play_scraper import search
 
 
 def search_and_process(app_id: str):
-    game_info = search(app_id, lang="zh-TW", country="us", n_hits=10)
+    game_info = search(app_id, lang="zh-TW", country="TW", n_hits=10)
     game_data = pd.DataFrame(game_info)
     game_data = game_data.drop(
         [
@@ -51,8 +51,11 @@ def save_data(selected_game_data: pd.DataFrame):
             ["icon", "score", "description", "screenshots"], axis=1
         )
         target_game = selected_game_data["name"].values[0]
+        target_game_id = selected_game_data["packageId"].values[0]
         dataloader = DataBaseManager(database_name="./data/ingame_price.db")
-        game_info_data = dataloader.update_ingame_price(table_name=target_game)
+        game_info_data = dataloader.update_ingame_price(
+            table_name=target_game, target_game_id=target_game_id
+        )
 
         original_game_data = pd.read_csv("./configs/game_data.csv")
         merged_data = pd.concat([original_game_data, selected_game_data], ignore_index=True)
@@ -76,7 +79,7 @@ def get_dropdown_options():
     return choices
 
 
-with gr.Blocks() as demo:
+with gr.Blocks(theme=gr.themes.Soft()) as demo:
     with gr.Row():
         app_id_input = gr.Dropdown(label="APP 名稱", choices=get_dropdown_options())
         search_button = gr.Button("搜尋")

@@ -1,3 +1,4 @@
+from typing import Optional
 import sqlite3
 import datetime
 
@@ -5,7 +6,6 @@ import pandas as pd
 from pydantic import Field, BaseModel, ConfigDict, computed_field
 from src.currency import CurrencyRate
 from src.ingame_price import GameInfo
-from src.utils.clean_name import clean_game_name
 
 
 class DataBaseManager(BaseModel):
@@ -62,7 +62,9 @@ class DataBaseManager(BaseModel):
             currency_rate.to_csv("./data/currency_rates.csv", index=False)
             return currency_rate
 
-    def update_ingame_price(self, table_name: str) -> pd.DataFrame:
+    def update_ingame_price(
+        self, table_name: str, target_game_id: Optional[str] = None
+    ) -> pd.DataFrame:
         """這裡的table name可以是遊戲名稱 或是 任何名稱"""
         now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         if table_name in self.table_names:
@@ -72,13 +74,15 @@ class DataBaseManager(BaseModel):
             if pd.to_datetime(now) - pd.to_datetime(updated_time) < pd.Timedelta(days=3):
                 return data
             else:
-                game_info_instance = GameInfo(target_game=table_name)
+                game_info_instance = GameInfo(
+                    target_game=table_name, target_game_id=target_game_id
+                )
                 game_info_data = game_info_instance.fetch_data(country_currency=self.currency_rate)
                 game_info_data["database_updated_date"] = now
                 self.save_table(table_name=table_name, data=game_info_data)
                 return game_info_data
         else:
-            game_info_instance = GameInfo(target_game=table_name)
+            game_info_instance = GameInfo(target_game=table_name, target_game_id=target_game_id)
             game_info_data = game_info_instance.fetch_data(country_currency=self.currency_rate)
             game_info_data["database_updated_date"] = now
             self.save_table(table_name=table_name, data=game_info_data)
