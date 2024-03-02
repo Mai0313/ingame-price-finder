@@ -40,8 +40,8 @@ def get_user_selected_row(output_dataframe: pd.DataFrame, evt: gr.SelectData):
     )
     selected_game = output_dataframe["name"].values[0]
     icon_url = output_dataframe["icon"].values[0]
-    selected_game_screenshots = output_dataframe["screenshots"].values[0][0]
-    return user_selected_block, icon_url, [selected_game_screenshots]
+    selected_game_screenshots = output_dataframe["screenshots"].values[0]
+    return user_selected_block, icon_url, selected_game_screenshots
 
 
 def save_data(app_id: str, selected_row: str):
@@ -68,11 +68,9 @@ with gr.Blocks() as demo:
     output_dataframe = gr.DataFrame(interactive=False)
 
     search_button.click(fn=update_output, inputs=app_id_input, outputs=output_dataframe)
-    selected_row_input = gr.Textbox(
-        label="你選擇的是: ", placeholder="請點選上方任意行選擇要儲存的遊戲..."
-    )
-    icon_url = gr.Image(height=512, width=512)
-    selected_game_screenshots = gr.Gallery()
+    selected_row_input = gr.Textbox(label="你選擇的是: ", placeholder="請點選上方任意行選擇要儲存的遊戲...")
+    icon_url = gr.Image(height=256, width=256)
+    selected_game_screenshots = gr.Gallery(columns=[6], rows=[6], height="auto")
     output_dataframe.select(
         get_user_selected_row,
         inputs=[output_dataframe],
