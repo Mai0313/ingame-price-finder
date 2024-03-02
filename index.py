@@ -228,5 +228,5 @@ demo.launch(
     debug=True,
     # auth_message=auth_message,
     # auth=auth,
-    root_path="/seller",
+    # root_path="/seller",
 )
