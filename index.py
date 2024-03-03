@@ -96,49 +96,6 @@ def get_dropdown_options():
     return choices
 
 
-def get_buyer_ip(text, request: gr.Request):
-    if request:
-        # headers = request.headers
-        ip = request.client.host
-        # query_params = request.query_params
-        return ip
-    return text
-
-
-def save_order_data(
-    buyer_name: str,
-    buyer_id: str,
-    buyer_game: str,
-    buyer_item: str,
-    buyer_game_account: str,
-    buyer_game_password: str,
-    buyer_line_id: str,
-    buyer_amount: str,
-):
-    data = pd.DataFrame({
-        "姓名": [buyer_name],
-        "購買人ID": [buyer_id],
-        "購買遊戲": [buyer_game],
-        "購買項目": [buyer_item],
-        "遊戲帳號": [buyer_game_account],
-        "遊戲密碼": [buyer_game_password],
-        "聯繫方式 (Line ID)": [buyer_line_id],
-        "購買人金額": [buyer_amount],
-    })
-    buyer_database = DataBaseManager(database_name="./data/order_information.db")
-    buyer_database.save_table("order_list", data, mode="append")
-    return "# 🎉 您已成功下單"
-
-
-def get_order_data():
-    buyer_database = DataBaseManager(database_name="./data/order_information.db")
-    order_history = buyer_database.read_table("order_list")
-
-    order_data.value = order_history
-    order_data.visible = True
-    return order_history
-
-
 with gr.Blocks(theme=gr.themes.Soft(), title="💰代儲小助手", analytics_enabled=True) as demo:
     title = gr.Markdown("# 💰代儲小助手")
     with gr.Tab("價格查詢"):
@@ -176,48 +133,6 @@ with gr.Blocks(theme=gr.themes.Soft(), title="💰代儲小助手", analytics_en
         )
         save_button.click(
             fn=save_data, inputs=[selected_game_data], outputs=[save_result, game_info_data]
-        )
-    with gr.Tab("訂單管理"):
-        order_data = gr.DataFrame(interactive=False)
-
-    with gr.Tab("會員管理"):
-        pass
-
-    with gr.Tab("登記購買"):
-        with gr.Row():
-            buyer_name = gr.Textbox(label="姓名", placeholder="請輸入姓名")
-            buyer_id = gr.Textbox(label="購買人ID", interactive=False)
-        with gr.Row():
-            buyer_game = gr.Textbox(label="購買遊戲", placeholder="請輸入遊戲名稱")
-            buyer_item = gr.Textbox(label="購買項目", placeholder="請輸入購買項目")
-        with gr.Row():
-            buyer_game_account = gr.Textbox(
-                label="遊戲帳號", type="email", placeholder="請輸入遊戲帳號"
-            )
-            buyer_game_password = gr.Textbox(
-                label="遊戲密碼", type="password", placeholder="請輸入遊戲密碼"
-            )
-        with gr.Row():
-            buyer_line_id = gr.Textbox(label="聯繫方式 (Line ID)", placeholder="請輸入Line ID")
-            buyer_amount = gr.Number(label="購買人金額")
-
-        buyer_name.input(fn=get_buyer_ip, inputs=[buyer_name], outputs=[buyer_id])
-
-        submit_btn = gr.Button("提交")
-        order_result = gr.Markdown()
-        submit_btn.click(
-            fn=save_order_data,
-            inputs=[
-                buyer_name,
-                buyer_id,
-                buyer_game,
-                buyer_item,
-                buyer_game_account,
-                buyer_game_password,
-                buyer_line_id,
-                buyer_amount,
-            ],
-            outputs=[order_result],
         )
 
 demo.launch(

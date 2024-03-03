@@ -22,9 +22,9 @@ on:
   #   types: [opened, reopened, synchronize]
 
 env:
-  REQUIREMENTS_FILE: requirements_build.txt
+  REQUIREMENTS_FILE: requirements.txt
   PYINSTALLER_FILE: main.py
-  ARTIFACT_NAME: main
+  ARTIFACT_NAME: ingame_price_checker
 
 permissions:
   contents: read
@@ -58,40 +58,16 @@ jobs:
           python-version: '3.9'
           token: ${{ secrets.GITHUB_TOKEN || secrets.GH_TOKEN }}
 
-      # For Linux/MacOS
-      - name: Check if ${{ env.REQUIREMENTS_FILE }} exists (Unix)
-        id: checkfile_unix
-        run: |
-          if [ -f "${{ env.REQUIREMENTS_FILE }}" ]; then
-            echo "::set-output name=exists::true"
-          else
-            echo "::set-output name=exists::false"
-          fi
-        if: runner.os != 'Windows'
-        shell: bash
-
-      # For Windows
-      - name: Check if ${{ env.REQUIREMENTS_FILE }} exists (Windows)
-        id: checkfile_windows
-        run: |
-          if (Test-Path "${{ env.REQUIREMENTS_FILE }}") {
-            echo "::set-output name=exists::true"
-          } else {
-            echo "::set-output name=exists::false"
-          }
-        if: runner.os == 'Windows'
-        shell: pwsh  # PowerShell
-
-      - name: build exe
-        if: steps.checkfile_unix.outputs.exists == 'true' || steps.checkfile_windows.outputs.exists == 'true'
+      - name: build executable for ${{ runner.os }}
+        continue-on-error: true
         run: |
           pip install -r ${{ env.REQUIREMENTS_FILE }}
-          pyinstaller --onefile ${{ env.PYINSTALLER_FILE }} -n ${{ env.ARTIFACT_NAME }}_${{ runner.os }}
+          pyinstaller --onefile ${{ env.PYINSTALLER_FILE }} -n ${{ env.ARTIFACT_NAME }}
 
       # Optionally verify that it works (provided that it does not need user interaction)
       - name: Upload Artifact
+        continue-on-error: true
         uses: actions/upload-artifact@v4
-        if: steps.checkfile_unix.outputs.exists == 'true' || steps.checkfile_windows.outputs.exists == 'true'
         with:
           name: ${{ env.ARTIFACT_NAME }}_${{ runner.os }}
           path: dist/*
@@ -125,15 +101,14 @@ jobs:
 
   update-release-draft:
     permissions:
-      # write permission is required to create a github release
       contents: write
-      # write permission is required for autolabeler
-      # otherwise, read permission is required at least
+
       pull-requests: write
     runs-on: ubuntu-latest
+    # container: catthehacker/ubuntu:act-20.04  # Uncomment it if you use it on Gitea
+
     needs:
       - build
-    # container: catthehacker/ubuntu:act-20.04  # Uncomment it if you use it on Gitea
 
     steps:
       - name: Disable SSL Verify
@@ -144,7 +119,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Drafts your next Release notes as Pull Requests are merged into "master"
       - name: Draft Release
         uses: release-drafter/release-drafter@v5.25.0
         id: draft
