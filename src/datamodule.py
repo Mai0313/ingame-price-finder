@@ -21,11 +21,14 @@ class DataBaseManager(BaseModel):
     @computed_field
     @property
     def table_names(self) -> list[str]:
-        table_names_ = pd.read_sql_query(
-            "SELECT name FROM sqlite_master WHERE type='table';", self.get_connection
-        )
-        table_names_ = table_names_["name"].values.tolist()
-        return table_names_
+        try:
+            table_names_ = pd.read_sql_query(
+                "SELECT name FROM sqlite_master WHERE type='table';", self.get_connection
+            )
+            table_names_ = table_names_["name"].values.tolist()
+            return table_names_
+        except Exception:
+            return []
 
     def save_table(
         self, table_name: str, data: pd.DataFrame, mode: Optional[str] = "replace"
