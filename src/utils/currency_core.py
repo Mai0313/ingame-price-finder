@@ -16,7 +16,7 @@ class CurrencyCore(BaseModel):
             date_info = ""
         return exchange_rate, date_info
 
-    def parse_currency_rates(self, html_content: str):
+    def parse_currency_rates(self, html_content: str) -> list[dict[str, str | None]]:
         soup = BeautifulSoup(html_content, "html.parser")
         rows = soup.find_all("tr")
         currency_content = soup.find("a", onclick="change_ccy()")
@@ -51,12 +51,12 @@ class CurrencyCore(BaseModel):
 
         return country_rates.values()
 
-    def fetch_currency_rates(self):
+    def fetch_currency_rates(self) -> list[dict[str, str | None]]:
         url = f"https://www.twrates.com/card/mastercard/{self.country_name}.html"
         try:
             response = requests.get(url)
             response.raise_for_status()
             result = self.parse_currency_rates(response.text)
             return result
-        except Exception as e:
+        except Exception:
             pass

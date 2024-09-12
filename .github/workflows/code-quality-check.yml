@@ -7,14 +7,7 @@
 name: Code Quality Check
 
 on:
-  push:
-    branches:
-      - master
-
   pull_request:
-    branches:
-      - master
-      - release/*
 
 jobs:
   code-quality-check:
@@ -27,20 +20,13 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
-          token: ${{ secrets.GITHUB_TOKEN || secrets.GH_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+          submodules: 'recursive'
 
-      - name: Cache pre-commit dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pre-commit
-          key: ${{ runner.os }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pre-commit
+      - uses: actions/labeler@v5
+        continue-on-error: true
 
       - name: Run pre-commits
         id: code-quality-check

@@ -1,10 +1,8 @@
-import os
-from typing import Union, Optional
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import pandas as pd
-from pydantic import Field, BaseModel, computed_field, model_validator
+from pydantic import Field, BaseModel, computed_field
 from price_parser import Price
 from rich.progress import Progress
 from google_play_scraper import app
@@ -16,36 +14,44 @@ class GameInfo(BaseModel):
         title="Target Game",
         description="The name of the game you want to fetch the information for",
     )
-    target_game_id: Optional[str] = Field(default=None)
+    target_game_id: str | None = Field(default=None)
 
     @computed_field
     @property
     def country_codes(self) -> list[str]:
         country_codes = pd.read_csv("./configs/countries_currency.csv")
         country_codes = country_codes.dropna(subset=["CountryCode"])
-        country_codes = country_codes["CountryCode"].values.tolist()
+        country_codes = country_codes["CountryCode"].to_numpy().tolist()
         return country_codes
 
     @computed_field
     @property
-    def game_details(self) -> tuple[str, Union[str, None]]:
+    def game_details(self) -> tuple[str, str | None]:
         game_data = pd.read_csv("./configs/game_data.csv")
         game_data = game_data.query("@self.target_game in name or @self.target_game in packageId")
         if not game_data.empty:
-            game_name = game_data["name"].values[0]
-            game_id = game_data["packageId"].values[0]
+            game_name = game_data["name"].to_numpy()[0]
+            game_id = game_data["packageId"].to_numpy()[0]
             return game_name, game_id
-        else:
-            return self.target_game, None
+        return self.target_game, None
 
     @classmethod
     def fetch_single_game_info(
         cls, game_id: str, game_name: str, country: str
-    ) -> dict[str, Union[str, float, None]]:
-        """This function will only get the price of a game.
+    ) -> dict[str, str | float | None]:
+        """Fetches the price information of a game.
 
-        game_id (str): this is the packageId of the game
-        game_name (str): this is the name of the game
+        Args:
+            game_id (str): The packageId of the game.
+            game_name (str): The name of the game.
+            country (str): The country for which the price information is fetched.
+
+        Returns:
+            dict[str, str | float | None]: A dictionary containing the game name, country, lowest price, and highest price.
+                - 'Name': The name of the game.
+                - 'country': The country for which the price information is fetched.
+                - 'lowest': The lowest price of the game in the specified country.
+                - 'highest': The highest price of the game in the specified country.
         """
         try:
             price = app(game_id, lang="zh-TW", country=country)["inAppProductPrice"]  # type: str
@@ -61,8 +67,8 @@ class GameInfo(BaseModel):
     def get_price_details(
         cls, country_currency: pd.DataFrame, game_info: pd.DataFrame
     ) -> pd.DataFrame:
-        price_details = pd.merge(
-            country_currency, game_info, left_on="CountryCode", right_on="country", how="left"
+        price_details = country_currency.merge(
+            game_info, left_on="CountryCode", right_on="country", how="left"
         )
         price_details = price_details[
             [
@@ -107,7 +113,7 @@ class GameInfo(BaseModel):
         )
         return price_details
 
-    def fetch_data(self, country_currency: Optional[pd.DataFrame] = None) -> pd.DataFrame:
+    def fetch_data(self, country_currency: pd.DataFrame | None = None) -> pd.DataFrame:
         if self.target_game_id is None:
             self.target_game, self.target_game_id = self.game_details
         game_information = []
