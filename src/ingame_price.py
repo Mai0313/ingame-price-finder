@@ -1,11 +1,14 @@
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+import yaml
 import pandas as pd
 from pydantic import Field, BaseModel, computed_field
 from price_parser import Price
 from rich.progress import Progress
 from google_play_scraper import app
+
+from src.models.game import GameInfoModel
 
 
 class GameInfo(BaseModel):
@@ -24,35 +27,19 @@ class GameInfo(BaseModel):
         country_codes = country_codes["CountryCode"].to_numpy().tolist()
         return country_codes
 
-    @computed_field
-    @property
-    def game_details(self) -> tuple[str, str | None]:
-        game_data = pd.read_csv("./configs/game_data.csv")
-        game_data = game_data.query("@self.target_game in name or @self.target_game in packageId")
-        if not game_data.empty:
-            game_name = game_data["name"].to_numpy()[0]
-            game_id = game_data["packageId"].to_numpy()[0]
-            return game_name, game_id
-        return self.target_game, None
+    def get_game_info(self) -> list[GameInfoModel]:
+        game_info_list = []
+        with open("./configs/gameList.json", encoding="utf-8") as f:
+            game_list = yaml.safe_load(f)
+            for game in game_list:
+                game_info = GameInfoModel(**game)
+                game_info_list.append(game_info)
+        return game_info_list
 
     @classmethod
     def fetch_single_game_info(
         cls, game_id: str, game_name: str, country: str
     ) -> dict[str, str | float | None]:
-        """Fetches the price information of a game.
-
-        Args:
-            game_id (str): The packageId of the game.
-            game_name (str): The name of the game.
-            country (str): The country for which the price information is fetched.
-
-        Returns:
-            dict[str, str | float | None]: A dictionary containing the game name, country, lowest price, and highest price.
-                - 'Name': The name of the game.
-                - 'country': The country for which the price information is fetched.
-                - 'lowest': The lowest price of the game in the specified country.
-                - 'highest': The highest price of the game in the specified country.
-        """
         try:
             price = app(game_id, lang="zh-TW", country=country)["inAppProductPrice"]  # type: str
             price = price.replace("每個項目 ", "")

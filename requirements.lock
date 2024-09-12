@@ -88,6 +88,8 @@ python-dateutil==2.9.0.post0
     # via pandas
 pytz==2024.2
     # via pandas
+pyyaml==6.0.2
+    # via igpf
 requests==2.32.3
     # via igpf
     # via opentelemetry-exporter-otlp-proto-http

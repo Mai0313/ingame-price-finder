@@ -201,6 +201,7 @@ pytz==2024.2
 pywin32==306 ; platform_python_implementation != 'PyPy' and sys_platform == 'win32'
     # via jupyter-core
 pyyaml==6.0.2
+    # via igpf
     # via pre-commit
 pyzmq==26.2.0
     # via ipykernel
