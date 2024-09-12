@@ -3,11 +3,16 @@ pandas
 pyarrow
 openpyxl
 pydantic
-rich
+pyyaml
 
 # project related
 google_play_scraper
 price_parser
+
+# Logger
+rich
+tomli
+logfire
 
 # For web scraping
 requests
