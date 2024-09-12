@@ -45,6 +45,10 @@ decorator==5.1.1
     # via ipython
 defusedxml==0.7.1
     # via genbadge
+deprecated==1.2.14
+    # via opentelemetry-api
+    # via opentelemetry-exporter-otlp-proto-http
+    # via opentelemetry-semantic-conventions
 distlib==0.3.8
     # via virtualenv
 et-xmlfile==1.1.0
@@ -55,6 +59,7 @@ exceptiongroup==1.2.2 ; python_full_version < '3.11'
 execnet==2.1.1
     # via pytest-xdist
 executing==2.1.0
+    # via logfire
     # via stack-data
 filelock==3.16.0
     # via virtualenv
@@ -65,10 +70,14 @@ flake8-html==0.4.3
 genbadge==1.1.1
 google-play-scraper==1.2.7
     # via igpf
+googleapis-common-protos==1.65.0
+    # via opentelemetry-exporter-otlp-proto-http
 identify==2.6.0
     # via pre-commit
 idna==3.8
     # via requests
+importlib-metadata==8.4.0
+    # via opentelemetry-api
 iniconfig==2.0.0
     # via pytest
 ipykernel==6.29.5
@@ -87,6 +96,8 @@ jupyter-core==5.7.2
     # via jupyter-client
 jupyterlab-widgets==3.0.13
     # via ipywidgets
+logfire==0.52.0
+    # via igpf
 markdown-it-py==3.0.0
     # via rich
 markupsafe==2.1.5
@@ -107,6 +118,25 @@ numpy==2.1.1
     # via pyarrow
 openpyxl==3.1.5
     # via igpf
+opentelemetry-api==1.27.0
+    # via opentelemetry-exporter-otlp-proto-http
+    # via opentelemetry-instrumentation
+    # via opentelemetry-sdk
+    # via opentelemetry-semantic-conventions
+opentelemetry-exporter-otlp-proto-common==1.27.0
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-exporter-otlp-proto-http==1.27.0
+    # via logfire
+opentelemetry-instrumentation==0.48b0
+    # via logfire
+opentelemetry-proto==1.27.0
+    # via opentelemetry-exporter-otlp-proto-common
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-sdk==1.27.0
+    # via logfire
+    # via opentelemetry-exporter-otlp-proto-http
+opentelemetry-semantic-conventions==0.48b0
+    # via opentelemetry-sdk
 orjson==3.10.7
     # via igpf
 packaging==24.1
@@ -130,6 +160,10 @@ price-parser==0.3.4
     # via igpf
 prompt-toolkit==3.0.47
     # via ipython
+protobuf==4.25.4
+    # via googleapis-common-protos
+    # via logfire
+    # via opentelemetry-proto
 psutil==6.0.0
     # via ipykernel
 ptyprocess==0.7.0 ; sys_platform != 'emscripten' and sys_platform != 'win32'
@@ -174,10 +208,13 @@ pyzmq==26.2.0
 requests==2.32.3
     # via genbadge
     # via igpf
+    # via opentelemetry-exporter-otlp-proto-http
 rich==13.8.1
     # via igpf
+    # via logfire
 setuptools==74.1.2
     # via genbadge
+    # via opentelemetry-instrumentation
 six==1.16.0
     # via asttokens
     # via python-dateutil
@@ -187,6 +224,7 @@ stack-data==0.6.3
     # via ipython
 tomli==2.0.1 ; python_full_version == '3.11'
     # via coverage
+    # via logfire
     # via pytest
 tornado==6.4.1
     # via ipykernel
@@ -201,6 +239,8 @@ traitlets==5.14.3
     # via matplotlib-inline
 typing-extensions==4.12.2
     # via ipython
+    # via logfire
+    # via opentelemetry-sdk
     # via pydantic
     # via pydantic-core
 tzdata==2024.1
@@ -213,3 +253,8 @@ wcwidth==0.2.13
     # via prompt-toolkit
 widgetsnbextension==4.0.13
     # via ipywidgets
+wrapt==1.16.0
+    # via deprecated
+    # via opentelemetry-instrumentation
+zipp==3.20.1
+    # via importlib-metadata

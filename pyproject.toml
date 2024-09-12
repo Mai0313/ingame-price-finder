@@ -74,6 +74,7 @@ dependencies = [
     "price-parser>=0.3.4",
     "requests>=2.32.3",
     "beautifulsoup4>=4.12.3",
+    "logfire>=0.52.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
