@@ -56,3 +56,7 @@ class CurrencyCore(BaseModel):
         response.raise_for_status()
         result = self.__parse_currency_rates(response.text)
         return result
+    
+if __name__ == "__main__":
+    currency_rate = CurrencyCore(country_name="tw")
+    t = currency_rate.fetch_currency_rates()

@@ -100,7 +100,8 @@ six==1.16.0
     # via python-dateutil
 soupsieve==2.6
     # via beautifulsoup4
-tomli==2.0.1 ; python_full_version < '3.11'
+tomli==2.0.1
+    # via igpf
     # via logfire
 typing-extensions==4.12.2
     # via logfire

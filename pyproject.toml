@@ -75,6 +75,7 @@ dependencies = [
     "requests>=2.32.3",
     "beautifulsoup4>=4.12.3",
     "logfire>=0.52.0",
+    "tomli>=2.0.1",
 ]
 readme = "README.md"
 requires-python = ">= 3.10"
