@@ -1,26 +1,80 @@
 import bs4
-from pydantic import Field, BaseModel
+import logfire
+from pydantic import Field, BaseModel, computed_field
 import requests
+
+from models.currency_rate import CurrencyInfo, CurrencyRate
+
+logfire.configure()
 
 
 class CurrencyCore(BaseModel):
-    country_name: str = Field(..., title="Country Name", description="Country name")
+    country_name: str = Field(default="usd", title="Country Name", description="Country name")
+
+    @computed_field
+    @property
+    def base_url(self) -> str:
+        return f"https://www.twrates.com/card/mastercard/{self.country_name}.html"
 
     @staticmethod
-    def __parse_exchange_rate_info(exchange_rate_info: str) -> tuple[str, str]:
+    def __parse_exchange_rate_info(exchange_rate_info: str) -> CurrencyInfo:
         if "(" in exchange_rate_info:
             exchange_rate, date_info = exchange_rate_info.split("(")
-            date_info = date_info.replace(")", "").strip()
+            date_info = date_info.rstrip(")").strip()
         else:
-            exchange_rate = exchange_rate_info
-            date_info = ""
-        return exchange_rate, date_info
+            exchange_rate, date_info = exchange_rate_info, ""
+        exchange_rate = exchange_rate.replace("\xa0", "").strip()
+        return CurrencyInfo(exchange_rate=exchange_rate, date_info=date_info)
 
-    def __parse_currency_rates(self, html_content: str) -> list[dict[str, str | None]]:
-        soup = bs4.BeautifulSoup(html_content, "html.parser")
+    def get_all_currency(self) -> list[dict[str, str]]:
+        """Retrieves a list of all available currencies and their corresponding links.
+
+        Returns:
+            A list of dictionaries, where each dictionary contains the currency name (in Chinese) as the key and the currency link as the value.
+
+        Example:
+            >>> currency_rate = CurrencyCore(country_name="usd")
+            >>> all_currency = currency_rate.get_all_currency()[0]
+            >>> print(all_currency)
+            {'美金': 'https://www.twrates.com/card/mastercard/usd.html'}
+        """
+        # Use this as base url to get all available currency
+        response = requests.get(self.base_url)
+        if response.status_code == 200:
+            soup = bs4.BeautifulSoup(response.text, "html.parser")
+            __currency_list: bs4.element.Tag = soup.find_all("li", class_="itm")
+            currency_list = []
+            for currency in __currency_list:
+                currency_name = currency.text.strip()
+                currency_name_cn = currency_name.split(" - ")[-1]
+                _currency_link = currency.find("a")["href"]
+                currency_link = f"https://www.twrates.com{_currency_link}"
+                currency_list.append({currency_name_cn: currency_link})
+        else:
+            logfire.exception("Failed to get currency list", url=self.base_url)
+        return currency_list
+
+    def fetch_currency_rates(self) -> CurrencyRate:
+        """Fetches the currency rates for a specific country.
+
+        Returns:
+            CurrencyRate: An object containing the currency rates.
+
+        Raises:
+            logfire.exception: If the request to fetch the currency rates fails.
+
+        Example:
+            >>> currency_rate = CurrencyCore(country_name="usd")
+            >>> result = currency_rate.fetch_currency_rates()
+            >>> print(result.model_dump())
+            {'currency_en': 'usd', 'currency_cn': '美金', 'jcb': '32.137', 'master': '32.189', 'visa': '32.169', 'updated_time': '2024-09-12'}
+        """
+        response = requests.get(self.base_url)
+        if response.status_code != 200:
+            raise logfire.exception("Failed to get currency rates.", url=self.base_url)
+        soup = bs4.BeautifulSoup(response.text, "html.parser")
         rows: list[bs4.element.Tag] = soup.find_all("tr")
         currency_content = soup.find("a", onclick="change_ccy()")
-        country_rates = {}
         currency_name = "未找到幣值名稱"
         if currency_content:
             currency_name = (
@@ -29,34 +83,19 @@ class CurrencyCore(BaseModel):
                 .replace("\xa0", "")
                 .strip()
             )
-
+        result = {"currency_en": self.country_name, "currency_cn": currency_name}
         for row in rows:
             _cols = row.find_all("td")
             if len(_cols) > 1:
                 card_type: str = _cols[0].text.strip()
                 exchange_rate_info: str = _cols[1].text.strip()
-                exchange_rate, date_info = self.__parse_exchange_rate_info(exchange_rate_info)
-                exchange_rate = exchange_rate.replace("\xa0", "").strip()
+                currency_info = self.__parse_exchange_rate_info(exchange_rate_info)
+                result[card_type] = currency_info.exchange_rate
+        result["updated_time"] = currency_info.date_info
+        return CurrencyRate(**result)
 
-                if self.country_name not in country_rates:
-                    country_rates[self.country_name] = {
-                        "Currency": self.country_name,
-                        "Currency_CN": currency_name,
-                        "Updated_date": date_info,
-                        "JCB": None,
-                        "萬事達": None,
-                        "VISA": None,
-                    }
-                country_rates[self.country_name][card_type] = exchange_rate
-        return country_rates.values()
 
-    def fetch_currency_rates(self) -> list[dict[str, str | None]]:
-        url = f"https://www.twrates.com/card/mastercard/{self.country_name}.html"
-        response = requests.get(url)
-        response.raise_for_status()
-        result = self.__parse_currency_rates(response.text)
-        return result
-    
 if __name__ == "__main__":
-    currency_rate = CurrencyCore(country_name="tw")
-    t = currency_rate.fetch_currency_rates()
+    currency_rate = CurrencyCore(country_name="usd")
+    currency_rate.fetch_currency_rates()
+    currency_rate.get_all_currency()
