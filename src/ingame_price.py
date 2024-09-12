@@ -29,12 +29,20 @@ class GameInfoUpdater(BaseModel):
     @computed_field
     @property
     def game_info_list(self) -> list[GameInfo]:
-        _game_info_list = []
+        _game_info_list: list[GameInfo] = []
         with open("./configs/gameList.json", encoding="utf-8") as f:
             game_list = yaml.safe_load(f)
             for game in game_list:
                 game_info = GameInfo(**game)
                 _game_info_list.append(game_info)
+        if self.game_name:
+            _game_info_list: list[GameInfo] = [
+                game_info for game_info in _game_info_list if self.game_name in game_info.game_name
+            ]
+        if self.game_id:
+            _game_info_list: list[GameInfo] = [
+                game_info for game_info in _game_info_list if self.game_id in game_info.game_id
+            ]
         return _game_info_list
 
     def __fetch(self) -> GamePriceInfo:
