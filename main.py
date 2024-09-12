@@ -1,16 +1,9 @@
-import pandas as pd
-from src.datamodule import DataBaseManager
-
-
-def update_all_data() -> None:
-    game_data = pd.read_csv("./configs/game_data.csv")
-
-    for _, game in game_data.iterrows():
-        target_game = game["name"]
-        # target_game_id = game["packageId"]
-        dataloader = DataBaseManager(database_name="./data/ingame_price.db")
-        dataloader.update_ingame_price(table_name=target_game)
-
+from src.ingame_price import GameInfoUpdater
+from src.currency_core import CurrencyCore
 
 if __name__ == "__main__":
-    update_all_data()
+    currency_rate = CurrencyCore(country_name="usd")
+    currency_rate.fetch_currency_rates()
+    currency_rate.get_avali_currency()
+    game_info_fetcher = GameInfoUpdater(game_name="天堂W", country="us")
+    game_info_fetcher.fetch_game_info()

@@ -3,7 +3,7 @@ import logfire
 from pydantic import Field, BaseModel, computed_field
 import requests
 
-from models.currency_rate import CurrencyInfo, CurrencyRate
+from src.models.currency_rate import CurrencyInfo, CurrencyRate
 
 logfire.configure()
 
