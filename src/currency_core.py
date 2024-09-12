@@ -26,7 +26,7 @@ class CurrencyCore(BaseModel):
         exchange_rate = exchange_rate.replace("\xa0", "").strip()
         return CurrencyInfo(exchange_rate=exchange_rate, date_info=date_info)
 
-    def get_all_currency(self) -> list[dict[str, str]]:
+    def get_avali_currency(self) -> list[dict[str, str]]:
         """Retrieves a list of all available currencies and their corresponding links.
 
         Returns:
@@ -34,7 +34,7 @@ class CurrencyCore(BaseModel):
 
         Example:
             >>> currency_rate = CurrencyCore(country_name="usd")
-            >>> all_currency = currency_rate.get_all_currency()[0]
+            >>> all_currency = currency_rate.get_avali_currency()[0]
             >>> print(all_currency)
             {'美金': 'https://www.twrates.com/card/mastercard/usd.html'}
         """
@@ -98,4 +98,4 @@ class CurrencyCore(BaseModel):
 if __name__ == "__main__":
     currency_rate = CurrencyCore(country_name="usd")
     currency_rate.fetch_currency_rates()
-    currency_rate.get_all_currency()
+    currency_rate.get_avali_currency()
