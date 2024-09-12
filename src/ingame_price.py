@@ -55,7 +55,7 @@ class GameInfoUpdater(BaseModel):
                 name=self.game_name, country=self.country, lowest=0.0, highest=0.0
             )
 
-    def fetch_multiple_game_info(self) -> list[GamePriceInfo]:
+    def fetch_game_info(self) -> list[GamePriceInfo]:
         game_info_result = []
         if self.game_id and self.game_name:
             return game_info_result.append(self.__fetch())
@@ -70,4 +70,4 @@ class GameInfoUpdater(BaseModel):
 
 if __name__ == "__main__":
     game_info_fetcher = GameInfoUpdater(country="us")
-    game_info_fetcher.fetch_multiple_game_info()
+    game_info_fetcher.fetch_game_info()
