@@ -1,7 +1,7 @@
 import pandas as pd
 from pydantic import Field, BaseModel
 
-from src.utils.currency_core import CurrencyCore
+from src.currency_core import CurrencyCore
 
 
 class CurrencyRate(BaseModel):
