@@ -1,146 +1,81 @@
-import os
-from typing import Union, Optional
-import multiprocessing as mp
-from concurrent.futures import ProcessPoolExecutor, as_completed
-
-import pandas as pd
-from pydantic import Field, BaseModel, computed_field, model_validator
+import yaml
+import logfire
+from pydantic import Field, BaseModel, computed_field
 from price_parser import Price
-from rich.progress import Progress
-from google_play_scraper import app
+import google_play_scraper as gps
+
+from src.models.game import GameInfo, GamePriceInfo
+
+logfire.configure()
 
 
-class GameInfo(BaseModel):
-    target_game: str = Field(
-        ...,
-        title="Target Game",
-        description="The name of the game you want to fetch the information for",
+class GameInfoUpdater(BaseModel):
+    game_id: str | None = Field(
+        default=None,
+        title="Package ID",
+        description="Package ID from play store",
+        examples=["com.ncsoft.lineagew"],
+        deprecated=False,
     )
-    target_game_id: Optional[str] = Field(default=None)
+    game_name: str | None = Field(
+        default=None,
+        title="Game Name",
+        description="Game Name from play store",
+        examples=["天堂W"],
+        deprecated=False,
+    )
+    country: str = Field(..., title="Country")
 
     @computed_field
     @property
-    def country_codes(self) -> list[str]:
-        country_codes = pd.read_csv("./configs/countries_currency.csv")
-        country_codes = country_codes.dropna(subset=["CountryCode"])
-        country_codes = country_codes["CountryCode"].values.tolist()
-        return country_codes
+    def game_info_list(self) -> list[GameInfo]:
+        _game_info_list: list[GameInfo] = []
+        with open("./configs/gameList.json", encoding="utf-8") as f:
+            game_list = yaml.safe_load(f)
+            for game in game_list:
+                game_info = GameInfo(**game)
+                _game_info_list.append(game_info)
+        if self.game_name:
+            _game_info_list: list[GameInfo] = [
+                game_info for game_info in _game_info_list if self.game_name in game_info.game_name
+            ]
+        if self.game_id:
+            _game_info_list: list[GameInfo] = [
+                game_info for game_info in _game_info_list if self.game_id in game_info.game_id
+            ]
+        return _game_info_list
 
-    @computed_field
-    @property
-    def game_details(self) -> tuple[str, Union[str, None]]:
-        game_data = pd.read_csv("./configs/game_data.csv")
-        game_data = game_data.query("@self.target_game in name or @self.target_game in packageId")
-        if not game_data.empty:
-            game_name = game_data["name"].values[0]
-            game_id = game_data["packageId"].values[0]
-            return game_name, game_id
-        else:
-            return self.target_game, None
-
-    @classmethod
-    def fetch_single_game_info(
-        cls, game_id: str, game_name: str, country: str
-    ) -> dict[str, Union[str, float, None]]:
-        """This function will only get the price of a game.
-
-        game_id (str): this is the packageId of the game
-        game_name (str): this is the name of the game
-        """
+    def __fetch(self) -> GamePriceInfo:
         try:
-            price = app(game_id, lang="zh-TW", country=country)["inAppProductPrice"]  # type: str
+            lowest, highest = 0.0, 0.0
+            if not self.game_id or not self.game_name:
+                raise logfire.exception("game_id or game_name is missing")
+            price = gps.app(self.game_id, lang="zh-TW", country=self.country)["inAppProductPrice"]  # type: str
             price = price.replace("每個項目 ", "")
             lowest, highest = price.split(" - ")
             lowest = Price.fromstring(lowest).amount_float
             highest = Price.fromstring(highest).amount_float
-            return {"Name": game_name, "country": country, "lowest": lowest, "highest": highest}
+            return GamePriceInfo(
+                name=self.game_name, country=self.country, lowest=lowest, highest=highest
+            )
         except Exception:
-            return {"Name": game_name, "country": country, "lowest": None, "highest": None}
-
-    @classmethod
-    def get_price_details(
-        cls, country_currency: pd.DataFrame, game_info: pd.DataFrame
-    ) -> pd.DataFrame:
-        price_details = pd.merge(
-            country_currency, game_info, left_on="CountryCode", right_on="country", how="left"
-        )
-        price_details = price_details[
-            [
-                "Name",
-                "country",
-                "CountryCode",
-                "Currency",
-                "Currency_CN",
-                "Updated_date",
-                "lowest",
-                "highest",
-                "JCB",
-                "萬事達",
-                "VISA",
-            ]
-        ]
-        price_details["JCB"] = price_details["JCB"].astype(float)
-        price_details["萬事達"] = price_details["萬事達"].astype(float)
-        price_details["VISA"] = price_details["VISA"].astype(float)
-
-        price_details["JCB 最高價"] = price_details["JCB"] * price_details["highest"]
-        price_details["萬事達 最高價"] = price_details["萬事達"] * price_details["highest"]
-        price_details["VISA 最高價"] = price_details["VISA"] * price_details["highest"]
-
-        price_details["JCB 最低價"] = price_details["JCB"] * price_details["lowest"]
-        price_details["萬事達 最低價"] = price_details["萬事達"] * price_details["lowest"]
-        price_details["VISA 最低價"] = price_details["VISA"] * price_details["lowest"]
-
-        price_details = price_details.drop(["JCB", "萬事達", "VISA", "country"], axis=1)
-        price_details = price_details.drop_duplicates()
-        price_details = price_details.dropna(
-            subset=[
-                "Name",
-                "JCB 最高價",
-                "萬事達 最高價",
-                "VISA 最高價",
-                "JCB 最低價",
-                "萬事達 最低價",
-                "VISA 最低價",
-            ],
-            how="any",
-        )
-        return price_details
-
-    def fetch_data(self, country_currency: Optional[pd.DataFrame] = None) -> pd.DataFrame:
-        if self.target_game_id is None:
-            self.target_game, self.target_game_id = self.game_details
-        game_information = []
-        with Progress() as progress:
-            task = progress.add_task(
-                f"Fetching {self.target_game} information", total=len(self.country_codes)
+            return GamePriceInfo(
+                name=self.game_name, country=self.country, lowest=0.0, highest=0.0
             )
-            with ProcessPoolExecutor(max_workers=mp.cpu_count()) as executor:
-                futures = [
-                    executor.submit(
-                        self.fetch_single_game_info,
-                        game_id=self.target_game_id,
-                        game_name=self.target_game,
-                        country=country_code,
-                    )
-                    for country_code in self.country_codes
-                ]
-                for future in as_completed(futures):
-                    game_info = future.result()
-                    game_information.append(game_info)
-                    progress.update(task, advance=1)
-        game_information = pd.DataFrame(game_information)
-        game_information = game_information.dropna(subset=["lowest", "highest"])
 
-        if country_currency is not None:
-            game_information = self.get_price_details(
-                country_currency=country_currency, game_info=game_information
-            )
-        return game_information
+    def fetch_game_info(self) -> list[GamePriceInfo]:
+        game_info_result = []
+        if self.game_id and self.game_name:
+            return game_info_result.append(self.__fetch())
+        for game_info in self.game_info_list:
+            self.game_id = game_info.game_id
+            self.game_name = game_info.game_name
+            result = self.__fetch()
+            game_info_result.append(result)
+            logfire.info("Fetching Game Info", **result.model_dump())
+        return game_info_result
 
 
 if __name__ == "__main__":
-    target_game = "原神"
-    country_currency = pd.read_csv("./data/currency_rates.csv")
-    game_info_instance = GameInfo(target_game=target_game)
-    game_info_df = game_info_instance.fetch_data(country_currency=country_currency)
+    game_info_fetcher = GameInfoUpdater(country="us")
+    game_info_fetcher.fetch_game_info()

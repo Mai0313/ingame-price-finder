@@ -3,30 +3,29 @@ pandas
 pyarrow
 openpyxl
 pydantic
-rich
-google_play_scraper
-gradio
-gradio[oauth]
-deep-translator
-deep-translator[docx]
-deep-translator[pdf]
+pyyaml
 
 # project related
-date-parser
+google_play_scraper
 price_parser
-autorootcwd
 
-# test develop
+# Logger
+rich
+tomli
+logfire
+
+# For web scraping
 requests
 beautifulsoup4
 
-# Develop dependencies
+# Develop Tools
 ipykernel
 ipywidgets
 pre-commit
-pytest
 
-# # deprecated dependencies
-# playwright
-# omegaconf
-# tqdm
+# Pytes Tools
+pytest
+pytest-cov
+pytest-xdist
+pytest-asyncio
+genbadge[all]
