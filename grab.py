@@ -1,9 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
 import pycountry
+from rich.console import Console
+
+console = Console()
 
 countries = list(pycountry.countries.alpha_2)
-print(countries)
+console.print(countries)
 
 # 目標網站的 URL
 url = "https://app.sensortower.com/overview/985746746"
@@ -30,7 +33,7 @@ if response.status_code == 200:
 
     # 顯示結果
     for country in countries:
-        print(f"Country: {country[0]}, Code: {country[1]}")
+        console.print(f"Country: {country[0]}, Code: {country[1]}")
 
 else:
-    print(f"Failed to retrieve the page, status code: {response.status_code}")
+    console.print(f"Failed to retrieve the page, status code: {response.status_code}")
