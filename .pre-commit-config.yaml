@@ -1,21 +1,22 @@
 default_language_version:
   python: python3
 
-exclude: configs
-
 default_install_hook_types:
   - pre-commit
-  - pre-push
+  - post-checkout
+  - post-merge
+  - post-rewrite
 
 default_stages:
   - pre-commit
-  - pre-push
-
+  - post-checkout
+  - post-merge
+  - post-rewrite
 
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.6.4
+    rev: v0.9.6
     hooks:
       - id: ruff
         types_or: [ python, pyi, jupyter ]
@@ -23,13 +24,14 @@ repos:
         types_or: [ python, pyi, jupyter ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       # list of supported hooks: https://pre-commit.com/hooks.html
       - id: check-added-large-files
-        exclude: poetry.lock
+        exclude: poetry.lock|uv.lock
       - id: check-ast
       - id: check-yaml
+        exclude: mkdocs.yml
         args:
           - --allow-multiple-documents
       - id: check-toml
@@ -53,24 +55,30 @@ repos:
 
   # md formatting
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.17
+    rev: 0.7.22
     hooks:
       - id: mdformat
         args:
           - --number
         additional_dependencies:
           - mdformat-gfm
+          - mdformat-web
+          - mdformat-ruff
+          - mdformat-config
           - mdformat-tables
+          - mdformat-footnote
           - mdformat_frontmatter
+          - mdformat-pyproject
+          - mdformat-mkdocs[recommended]
 
   # jupyter notebook cell output clearing
   - repo: https://github.com/kynan/nbstripout
-    rev: 0.7.1
+    rev: 0.8.1
     hooks:
       - id: nbstripout
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
       - id: codespell
         additional_dependencies:
@@ -83,14 +91,28 @@ repos:
   #       language: system
   #       entry: bash -c 'if command -v code2flow >/dev/null 2>&1; then code2flow **/**/*.py -o ./.github/code2flow/flow.png; else echo "code2flow not installed, skipping"; fi'
 
-  # - repo: https://github.com/pre-commit/mirrors-mypy
-  #   rev: v1.11.2
-  #   hooks:
-  #     - id: mypy
-  #       additional_dependencies:
-  #         - "pydantic>=2.8.2"
-  #         - "types-PyYAML"
-  #         - "types-requests"
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - "Pydantic"
+          - "Types-PyYAML"
+          - "Types-requests"
+          - "Types-urllib3"
+          - "Types-redis"
+          - "Types-attrs"
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.6.1
+    hooks:
+      - id: uv-sync
+      - id: uv-lock
+      # - id: uv-export
+      #   args: ["--no-dev", "--no-hashes", "--frozen", "--output-file", "./requirements.txt"]
+      # - id: pip-compile
+      #   args: [pyproject.toml]
+      #   files: ^pyproject\.(toml|ini)$
 
   # - repo: https://github.com/RobertCraigie/pyright-python
   #   rev: v1.1.374

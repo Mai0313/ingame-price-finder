@@ -2,6 +2,7 @@
 addopts = [
     "--color=yes",
     "--durations=0",
+    "--durations-min=0.1",
     "--strict-markers",
     "--doctest-modules",
     "--quiet",
@@ -9,6 +10,7 @@ addopts = [
     "--cov-report=term-missing:skip-covered",
     "--junitxml=./.github/reports/pytest.xml",
     "--cov-report=xml:./.github/reports/coverage.xml",
+    "--cov-report=html:./.github/coverage_html_report",
     "--cache-clear",
     "-n=auto",
     "--no-header",
@@ -31,6 +33,8 @@ minversion = "8.2"
 testpaths = "tests/"
 python_files = "test_*.py"
 cache_dir = "./.cache/pytest"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.coverage.report]
 exclude_lines = [
@@ -53,12 +57,12 @@ data_file = './.github/reports/.coverage'
 omit = ["./src/ameba/*"]
 
 # ================== #
-#        Rye         #
+#        uv          #
 # ================== #
 
 [project]
 name = "igpf"
-version = "0.1.0"
+version = "1.0.0"
 description = "In game price finder for google play."
 authors = [
     { name = "Wei", email = "mai@mai0313.com" },
@@ -84,47 +88,65 @@ requires-python = ">= 3.10"
 license = { text = "MIT" }
 
 [project.urls]
-Homepage = "https://github.com/Mai0313/InGamePriceFinder"
-Repository = "https://github.com/Mai0313/InGamePriceFinder"
-
-[tool.rye.scripts]
-pre = { cmd = "pre-commit run -a", env-file = ".env" }
-
-[[tool.rye.sources]]
-name = "default"
-url = "https://pypi.org/simple"
+Homepage = "https://github.com/Mai0313/ingame-price-finder"
+Repository = "https://github.com/Mai0313/ingame-price-finder"
 
 [build-system]
 requires = ["hatchling", "hatch-fancy-pypi-readme"]
 build-backend = "hatchling.build"
 
-[tool.rye]
-managed = false
-virtual = false
-universal = true
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "ipykernel>=6.29.5",
     "ipywidgets>=8.1.5",
-    "pre-commit>=3.8.0",
-    "pytest>=8.3.2",
-    "pytest-cov>=5.0.0",
-    "pytest-xdist>=3.6.1",
-    "pytest-asyncio==0.23.8",
+    "notebook>=7.3.2",
+    "poethepoet>=0.32.2",
+    "pre-commit>=4.0.1",
+]
+test = [
     "genbadge[all]>=1.1.1",
+    "pytest>=8.3.4",
+    "pytest-asyncio>=0.25.3",
+    "pytest-cov>=6.0.0",
+    "pytest-xdist[psutil]>=3.6.1",
+]
+docs = [
+    "anyio>=4.8.0",
+    "fire>=0.7.0",
+    "griffe-typingdoc>=0.2.7",
+    "markdown-exec[ansi]>=1.10.0",
+    "mkdocs-autorefs>=1.3.1",
+    "mkdocs-material>=9.6.4",
+    "mkdocstrings[python]>=0.28.1",
+    "rich>=13.9.4",
+    "ruff>=0.9.6",
+    "tabulate>=0.9.0",
 ]
 
 [tool.hatch.metadata]
 allow-direct-references = true
 
 [tool.hatch.build]
-include = ["*"]
+include = [
+    "src/*"
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["*"]
 
 [tool.hatch.build.targets.sdist]
 # Basically everything except hidden files/directories (such as .github, .devcontainers, .python-version, etc)
-include = ["*"]
+include = [
+    "/*.toml",
+    "/*.json",
+    "/*.lock",
+    "/*.md",
+    "/noxfile.py",
+    "bin/*",
+    "examples/*",
+    "src/*",
+    "tests/*",
+]
 exclude = [
     "/.github",
     "/.devcontainers",
@@ -158,21 +180,83 @@ path = "README.md"
 pattern = '\[(.+?)\]\(((?!https?://)\S+?)\)'
 replacement = '[\1](https://github.com/openai/openai-python/tree/main/\g<2>)'
 
+[tool.rye.scripts]
+api = { cmd = "python ./api.py" }
+main = { cmd = "python ./main.py" }
+
+# Documentation
+"docs:gen" = "make gen-docs"
+"docs:deploy" = "mkdocs gh-deploy --force --clean"
+"docs:run" = "mkdocs serve"
+gen = { chain = ["docs:gen", "docs:deploy"] }
+docs = { chain = ["docs:gen", "docs:run"] }
+
+[tool.poe.tasks]
+api = "python ./api.py"
+main = "python ./main.py"
+
+# Documentation
+docs_gen = "make gen-docs"
+docs_deploy = "mkdocs gh-deploy --force --clean"
+docs_run = "mkdocs serve"
+gen = ["docs_gen", "docs_deploy"]
+docs = ["docs_gen", "docs_run"]
+
+# https://docs.astral.sh/uv/reference/settings
+[tool.uv]
+managed = true
+package = false
+check-url = "https://test.pypi.org/simple"
+publish-url = "https://test.pypi.org/legacy/"
+compile-bytecode = true
+# concurrent-builds = 4
+# concurrent-downloads = 4
+# concurrent-installs = 4
+index-strategy = "unsafe-best-match"
+link-mode = "copy"
+native-tls = true
+no-binary = false
+offline = false
+prerelease = "if-necessary-or-explicit"
+preview = true
+
+# https://docs.astral.sh/uv/reference/settings/#index
+[[tool.uv.index]]
+name = "default"
+url = "https://pypi.org/simple"
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu118"
+# If you set it to `true`, it will be moved to the end of the prioritized list.
+# In other words, it will search pypi first, then here.
+default = true
+
+[tool.uv.pip]
+annotation-style = "line"
+output-file = "requirements.txt"
+
 # ================== #
 #        RUFF        #
 # ================== #
 [tool.ruff]
 
-# required-version = "0.1.8"
+# Enable preview features.
+preview = true
 
 # Enable Auto Fixing.
 fix = true
+unsafe-fixes = true
+
+# Whether to automatically exclude files that are ignored by .ignore, .gitignore, .git/info/exclude, and global gitignore files. Enabled by default.
+respect-gitignore = true
 
 # Enumerate all fixed violations.
 show-fixes = true
 
 # In addition to the standard set of exclusions, omit all tests, plus a specific file.
 extend-exclude = [
+    ".venv",
     "logs",
     "data",
     ".git",
@@ -184,7 +268,6 @@ extend-exclude = [
     ".mypy_cache",
     ".ruff_cache",
     "__pypackages__",
-    "./src/deprecated",
 ]
 
 # In addition to the standard set of inclusions, include `.pyw` files.
@@ -207,11 +290,18 @@ output-format = "pylint"
 # Same as Google Python Style Guide.
 line-length = 99
 
+[tool.ruff.analyze]
+# Enable preview features.
+preview = true
+detect-string-imports = true
+direction = "Dependencies"
+
 
 [tool.ruff.lint]
+# Enable preview features.
+preview = true
 
 task-tags = ["TODO", "FIXME", "BUG", "XXX", "REFACT", "NOTE", "MARK", "HACK"]
-preview = true
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
@@ -219,8 +309,13 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 # Allow autofix for all enabled rules (when `--fix`) is provided.
 # Ref: https://beta.ruff.rs/docs/rules/#ruff-specific-rules-ruf
 fixable = ["ALL"]
-unfixable = []
+
+# Allow minus-sign (U+2212), greek-small-letter-rho (U+03C1), and the asterisk-operator (U+2217),
+# which could be confused for "-", "p", and "*", respectively.
 allowed-confusables = ["。", "，", "*", "；", "：", "、", "「", "」", "『", "』", "（", "）", "〔", "〕", "【", "】", "《", "》", "〈", "〉", "〖", "〗"]
+
+# Require explicit selection of preview rules.
+explicit-preview-rules = true
 
 select = [
     "F",  # pyflakes
@@ -233,7 +328,7 @@ select = [
     # "YTT",  # flake8-2020
     "ANN",  # flake8-annotations
     "ASYNC",  # flake8-async
-    # "S",  # flake8-bandit
+    "S",  # flake8-bandit
     # "BLE",  # flake8-blind-except
     # "FBT",  # flake8-boolean-trap
     "B",  # bugbear
@@ -253,7 +348,6 @@ select = [
     # "G",  # flake8-logging-format
     "INP",  # flake8-no-pep420
     # "PIE",  # flake8-pie
-    "T20",  # Remove Print Out
     "T20",  # flake8-print
     "PYI",  # flake8-pyi
     "PT",  # flake8-pytest-style
@@ -264,7 +358,7 @@ select = [
     "SLOT",  # flake8-slots
     "SIM",  # flake8-simplify
     "TID",  # flake8-tidy-imports
-    "TCH",  # flake8-type-checking
+    "TC",  # flake8-type-checking
     "INT",  # flake8-gettext
     # "ARG",  # flake8-unused-arguments
     # "PTH",  # flake8-use-pathlib
@@ -294,10 +388,6 @@ ignore = [
     "W505",
     # "N804",
     "E266",
-    # No need annotation for `self`
-    "ANN101",
-    # No need annotation for `cls`
-    "ANN102",
     # No need annotation for `__init__`
     "ANN204",
     # no need timeout for requests
@@ -338,7 +428,8 @@ keep-runtime-typing = true
 "__init__.py" = ["E402", "F401"]
 "*.ipynb" = ["T201", "F401", "S105", "F811", "ANN", "PERF", "SLF"]
 "tests/*" = ["S101", "ANN"]
-"notebooks/exp/*.ipynb" = ["UP", "DOC", "RUF", "D", "C"]
+"notebooks/*.ipynb" = ["UP", "DOC", "RUF", "D", "C", "F401", "T201"]
+"examples/*.py" = ["UP", "DOC", "RUF", "D", "C", "F401", "T201"]
 
 [tool.ruff.lint.isort]
 case-sensitive = true
@@ -382,12 +473,15 @@ max-returns = 6
 max-statements = 50
 
 [tool.ruff.format]
+# Enable preview style formatting.
+preview = true
+# Enable reformatting of code snippets in docstrings.
 docstring-code-format = true
+# Format all docstring code snippets with a line length of 60.
 docstring-code-line-length = 99
 exclude = ["generated"]
 indent-style = "space"
 line-ending = "auto"
-preview = true
 quote-style = "double"
 skip-magic-trailing-comma = true
 
@@ -400,7 +494,7 @@ skip-magic-trailing-comma = true
 [tool.logfire]
 send_to_logfire = false
 token = false
-project_name = "tma_api"
+project_name = "ingame-price-finder"
 trace_sample_rate = 1.0
 console_colors = "auto"
 console_span_style = "show-parents"
@@ -437,7 +531,7 @@ plugins = ["pydantic.mypy"]
 python_version = "3.10"
 explicit_package_bases = true
 cache_dir = "./.cache/.mypy_cache"
-exclude = ["^src/ameba/*", "^src/tma_server/*", "^tests/"]
+exclude = ["^tests/"]
 ignore_missing_imports = true
 # install_types = true
 # non_interactive = true
@@ -469,3 +563,81 @@ init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = false
 warn_untyped_fields = true
+
+[tool.git-cliff.changelog]
+# template for the changelog header
+header = """
+# Changelog\n
+All notable changes to this project will be documented in this file.\n
+"""
+# template for the changelog body
+# https://keats.github.io/tera/docs/#introduction
+body = """
+{% if version %}\
+    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+    ## [unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+    ### {{ group | striptags | trim | upper_first }}
+    {% for commit in commits %}
+        - {% if commit.scope %}*({{ commit.scope }})* {% endif %}\
+            {% if commit.breaking %}[**breaking**] {% endif %}\
+            {{ commit.message | upper_first }}\
+    {% endfor %}
+{% endfor %}\n
+"""
+# template for the changelog footer
+footer = """
+<!-- generated by git-cliff -->
+"""
+# remove the leading and trailing s
+trim = true
+# postprocessors
+postprocessors = [
+    # { pattern = '<REPO>', replace = "https://github.com/orhun/git-cliff" }, # replace repository URL
+]
+# render body even when there are no releases to process
+# render_always = true
+# output file path
+# output = "test.md"
+
+[tool.git-cliff.git]
+# parse the commits based on https://www.conventionalcommits.org
+conventional_commits = true
+# filter out the commits that are not conventional
+filter_unconventional = true
+# process each line of a commit as an individual commit
+split_commits = false
+# regex for preprocessing the commit messages
+commit_preprocessors = [
+    # Replace issue numbers
+    #{ pattern = '\((\w+\s)?#([0-9]+)\)', replace = "([#${2}](<REPO>/issues/${2}))"},
+    # Check spelling of the commit with https://github.com/crate-ci/typos
+    # If the spelling is incorrect, it will be automatically fixed.
+    #{ pattern = '.*', replace_command = 'typos --write-changes -' },
+]
+# regex for parsing and grouping commits
+commit_parsers = [
+    { message = "^feat", group = "<!-- 0 -->🚀 Features" },
+    { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
+    { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
+    { message = "^perf", group = "<!-- 4 -->⚡ Performance" },
+    { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
+    { message = "^style", group = "<!-- 5 -->🎨 Styling" },
+    { message = "^test", group = "<!-- 6 -->🧪 Testing" },
+    { message = "^chore\\(release\\): prepare for", skip = true },
+    { message = "^chore\\(deps.*\\)", skip = true },
+    { message = "^chore\\(pr\\)", skip = true },
+    { message = "^chore\\(pull\\)", skip = true },
+    { message = "^chore|^ci", group = "<!-- 7 -->⚙️ Miscellaneous Tasks" },
+    { body = ".*security", group = "<!-- 8 -->🛡️ Security" },
+    { message = "^revert", group = "<!-- 9 -->◀️ Revert" },
+    { message = ".*", group = "<!-- 10 -->💼 Other" },
+]
+# filter out the commits that are not matched by commit parsers
+filter_commits = false
+# sort the tags topologically
+topo_order = false
+# sort the commits inside sections by oldest/newest order
+sort_commits = "newest"

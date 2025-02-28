@@ -2,16 +2,28 @@ name: Build Package
 
 on:
   push:
-    branches:
-      - master
     tags:
       - v*
 
 jobs:
   build_package:
-    name: Build Package by Rye
+    name: Build Package by uv
     runs-on: ubuntu-latest
     container: catthehacker/ubuntu:act-20.04
+
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        os:
+          - ubuntu-latest
+        python-version:
+          # - "3.9"
+          - "3.10"
+          # - "3.11"
+          # - "3.12"
+
+    timeout-minutes: 20
 
     steps:
       - name: Disable SSL Verify
@@ -39,11 +51,18 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: 'recursive'
 
-      - name: Setup Rye
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+          python-version: ${{ matrix.python-version }}
+          pyproject-file: "pyproject.toml"
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
         run: |
-          make rye-install
-          ~/.rye/shims/rye pin 3.10
-          ~/.rye/shims/rye --version
+          uv python pin ${{ matrix.python-version }}
+          uv sync --no-dev
 
       - name: Get the version
         id: metadata
@@ -53,7 +72,7 @@ jobs:
         shell: bash
         run: |
           if [[ ! "$GITHUB_REF" =~ ^refs/tags/v ]]; then
-            VERSION=$(date +%Y.%m.%d)
+            VERSION=$(date +%Y.%-m.%-d.%-H.%-M)
           else
             VERSION=${GITHUB_REF#refs/tags/}
           fi
@@ -62,9 +81,8 @@ jobs:
 
       - name: Build Package
         run: |
-          sed -i 's/virtual = true/virtual = false/' pyproject.toml
-          ~/.rye/shims/rye version $VERSION
-          ~/.rye/shims/rye build --clean
+          uvx --from=toml-cli toml set --toml-path=pyproject.toml project.version $VERSION
+          uv build
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4.3.3
@@ -85,23 +103,3 @@ jobs:
         with:
           files: |
             ./dist/*
-
-      - name: Publish Package
-        continue-on-error: true
-        env:
-          PYPI_URL: https://test.pypi.org/legacy/
-        run: |
-          ~/.rye/shims/rye publish --repository ${{ github.repository }} --repository-url ${{ env.PYPI_URL }} --token ${{ secrets.PYPI_TOKEN }} -y
-
-      - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        continue-on-error: true
-        with:
-          user: ${{ secrets.PYPI_USERNAME }}
-          password: ${{ secrets.PYPI_PASSWORD }}
-          repository-url: https://test.pypi.org/legacy/
-          packages-dir: ./dist
-          verify-metadata: true
-          skip-existing: true
-          verbose: true
-          print-hash: true
