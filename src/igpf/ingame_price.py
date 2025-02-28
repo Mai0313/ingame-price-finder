@@ -4,7 +4,7 @@ from pydantic import Field, BaseModel, computed_field
 from price_parser import Price
 import google_play_scraper as gps
 
-from .types.game import GameInfo, GamePriceInfo
+from ._types.game import GameInfo, GamePriceInfo
 
 logfire.configure()
 
@@ -29,32 +29,27 @@ class GameInfoUpdater(BaseModel):
     @computed_field
     @property
     def game_info_list(self) -> list[GameInfo]:
-        _game_info_list: list[GameInfo] = []
+        game_info_list: list[GameInfo] = []
         with open("./configs/gameList.json", encoding="utf-8") as f:
             game_list = yaml.safe_load(f)
             for game in game_list:
                 game_info = GameInfo(**game)
-                _game_info_list.append(game_info)
+                game_info_list.append(game_info)
         if self.game_name:
-            _game_info_list: list[GameInfo] = [
-                game_info for game_info in _game_info_list if self.game_name in game_info.game_name
-            ]
+            return [info for info in game_info_list if self.game_name in game_info.game_name]
         if self.game_id:
-            _game_info_list: list[GameInfo] = [
-                game_info for game_info in _game_info_list if self.game_id in game_info.game_id
-            ]
-        return _game_info_list
+            return [info for info in game_info_list if self.game_id in game_info.game_id]
+        return game_info_list
 
     def __fetch(self) -> GamePriceInfo:
         try:
-            lowest, highest = 0.0, 0.0
             if not self.game_id or not self.game_name:
                 raise logfire.exception("game_id or game_name is missing")
             price = gps.app(self.game_id, lang="zh-TW", country=self.country)["inAppProductPrice"]  # type: str
             price = price.replace("每個項目 ", "")
-            lowest, highest = price.split(" - ")
-            lowest = Price.fromstring(lowest).amount_float
-            highest = Price.fromstring(highest).amount_float
+            lowest_string, highest_string = price.split(" - ")
+            lowest = Price.fromstring(lowest_string).amount_float
+            highest = Price.fromstring(highest_string).amount_float
             return GamePriceInfo(
                 name=self.game_name, country=self.country, lowest=lowest, highest=highest
             )
@@ -66,7 +61,8 @@ class GameInfoUpdater(BaseModel):
     def fetch_game_info(self) -> list[GamePriceInfo]:
         game_info_result = []
         if self.game_id and self.game_name:
-            return game_info_result.append(self.__fetch())
+            fetched_info = self.__fetch()
+            return [fetched_info]
         for game_info in self.game_info_list:
             self.game_id = game_info.game_id
             self.game_name = game_info.game_name

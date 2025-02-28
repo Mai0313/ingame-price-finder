@@ -21,7 +21,7 @@ class GameInfo(BaseModel):
 
 
 class GamePriceInfo(BaseModel):
-    name: str
+    name: str | None
     country: str
     lowest: float
     highest: float
