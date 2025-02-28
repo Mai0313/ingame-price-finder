@@ -97,7 +97,7 @@ class CurrencyCore(BaseModel):
                 currency_info = self.__parse_exchange_rate_info(exchange_rate_info)
                 result[card_type] = currency_info.exchange_rate
         result["updated_time"] = currency_info.date_info
-        logfire.info("Currency rate fetched successfully.", **result)
+        logfire.info("Currency rate fetched successfully.", url=base_url, **result)
         return CurrencyRate(**result)
 
     def fetch_currency_rates(self, currency_name_en: str) -> list[CurrencyRate]:
