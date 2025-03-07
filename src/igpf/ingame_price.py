@@ -4,7 +4,7 @@ from pydantic import Field, BaseModel, computed_field
 from price_parser import Price
 import google_play_scraper as gps
 
-from ._types.game import GameInfo, GamePriceInfo
+from .typings.game import GameInfo, GamePriceInfo
 
 logfire.configure()
 
