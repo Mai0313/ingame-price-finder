@@ -3,7 +3,7 @@ import logfire
 from pydantic import BaseModel
 import requests
 
-from src.igpf.typings.currency_rate import CurrencyInfo, CurrencyRate, CountryCurrency
+from src.typings.currency_rate import CurrencyInfo, CurrencyRate, CountryCurrency
 
 logfire.configure()
 

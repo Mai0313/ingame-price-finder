@@ -1,4 +1,4 @@
-from src.igpf.currency_core import CurrencyCore
+from src.currency_core import CurrencyCore
 
 if __name__ == "__main__":
     currency_rate = CurrencyCore()
