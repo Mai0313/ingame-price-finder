@@ -3,6 +3,7 @@ import logfire
 from pydantic import Field, BaseModel, computed_field
 from price_parser import Price
 import google_play_scraper as gps
+
 from src.igpf.typings.game import GameInfo, GamePriceInfo
 
 logfire.configure()
